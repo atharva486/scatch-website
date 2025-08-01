@@ -5,9 +5,6 @@ const {edit,profile,check_password,get_products,wishlist_products,delete_wishlis
 const router= express.Router();
 
 
-router.get('/',(req,res)=>{
-    res.send("Hey its working");
-})
 
 router.post('/register',register_user);
 
@@ -19,7 +16,7 @@ router.get('/profile',authMiddlewareUser,profile)
 
 router.get('/get_products',authMiddlewareUser,get_products);
 
-router.post('/check_password',check_password);
+router.post('/check_password',authMiddlewareUser,check_password);
 
 router.get('/wishlist_products',wishlist_products);
 
