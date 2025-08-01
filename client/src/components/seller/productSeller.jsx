@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../api/axios';
 import {useNavigate} from 'react-router-dom';
 import Flashpopup from '../flashpopup';
 
@@ -17,7 +17,7 @@ function ProductCard({product_id,image, productname, price, description,stock })
   const navigate = useNavigate();
   const delete_product =  async ()=>{
     try{
-    let res = await axios.post(`/api/seller/delete`,{product_id},{withCredentials:true});
+    let res = await api.post(`/api/seller/delete`,{product_id},{withCredentials:true});
     if(res.data.success){
       triggerFlash("Deleted The Product Successfully","success");
     window.location.reload();
@@ -42,7 +42,7 @@ function ProductCard({product_id,image, productname, price, description,stock })
   const handleNewPrice = async ()=>{
     setShowModal(false);
     try{
-    let res = await axios.post(`/api/product/change_price/${product_id}`,{newprice},{withCredentials:true});
+    let res = await api.post(`/api/product/change_price/${product_id}`,{newprice},{withCredentials:true});
     if(!res.data.success)
       triggerFlash("Something went wrong","error");
     
@@ -56,7 +56,7 @@ function ProductCard({product_id,image, productname, price, description,stock })
   const handleNewStock = async ()=>{
     setRenewStock(false);
     try{
-    let res = await axios.post(`/api/product/restock/${product_id}`,{newStock},{withCredentials:true})
+    let res = await api.post(`/api/product/restock/${product_id}`,{newStock},{withCredentials:true})
       if(!res.data.success)
         triggerFlash("Something went wrong","error");
           

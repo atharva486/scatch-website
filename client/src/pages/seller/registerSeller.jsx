@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import axios from 'axios'
+import api from '../../api/axios';
 import { useNavigate } from 'react-router-dom';
 import Flashpopup from '../../components/flashpopup';
 
@@ -10,9 +10,6 @@ function RegisterSeller() {
     setTimeout(() => setFlashPopup({ ...flashPopup, visible: false }), 1000); 
   };
   const navigate = useNavigate();
-  const login = () => {
-    navigate('/seller/login');
-  }
 
   const [formData, setFormData] = useState({
     fullname: '',
@@ -48,7 +45,7 @@ function RegisterSeller() {
     }
 
     try {
-      const res = await axios.post('/api/seller/register', formData , { withCredentials: true });
+      const res = await api.post('/api/seller/register', formData , { withCredentials: true });
       if (res.data.success === true) {
         navigate('/seller/login');
       } else {

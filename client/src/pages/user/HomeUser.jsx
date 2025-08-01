@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/axios';
 import Bar from '../../components/user/sidemenu'
 import Navbar from '../../components/user/navbar'
 import ProductCard from '../../components/user/productCard';
@@ -26,7 +26,7 @@ function HomeUser() {
   }
   const logout = async () => {
     try {
-      let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+      let res = awapi.post('/api/user/logout', {}, { withCredentials: true })
       if (res.data.success)
         navigate('/user/login');
       else
@@ -40,13 +40,13 @@ function HomeUser() {
     navigate(`/user/product/${id}`);
   }
   async function cart(id) {
-    let res = await axios.post(`/api/product/add_to_cart/${id}`, { withCredentials: true });
+    let res = await api.post(`/api/product/add_to_cart/${id}`, { withCredentials: true });
   }
   function buy_product(id) {
     navigate(`/user/buy/${id}`);
   }
   const get_data = async () => {
-    let res = await axios.get('/api/product/shop', { withCredentials: true });
+    let res = await api.get('/api/product/shop', { withCredentials: true });
     setDataFound(res.data.products);
   }
   useEffect(() => {
