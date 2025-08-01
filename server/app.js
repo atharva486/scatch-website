@@ -20,6 +20,4 @@ app.use('/api/seller',sellerRouter);
 app.use('/api/user',userRouter);
 app.use('/api/product',productRouter);
 
-app.listen(3000,()=>{
-    console.log("Hey server is working");
-});
+app.listen(3000);
