@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../axios/api';
 import Bar from '../../components/seller/sidemenuSeller'
 import Navbar from '../../components/seller/navbar'
 import ProductCard from '../../components/seller/productSeller';
@@ -23,7 +23,7 @@ function DashboardSeller() {
   }
   const logout = async () => {
     try {
-      let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+      let res = await api.post('/api/user/logout', {}, { withCredentials: true })
       if (res.data.success)
         navigate('/user/login');
       else
@@ -43,7 +43,7 @@ function DashboardSeller() {
   useEffect(() => {
     const get_data = async () => {
       try {
-        let res = await axios.get('/api/seller/prod_names', { withCredentials: true });
+        let res = await api.get('/api/seller/prod_names', { withCredentials: true });
         setDataFound(res.data.products);
       }
       catch (err) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import api from '../../axios/api';
 import { useNavigate,Link } from 'react-router-dom';
 import Bar from '../../components/user/sidemenu'
 import Navbar from '../../components/user/navbar'
@@ -23,7 +23,7 @@ function Orders() {
   }
     const logout = async ()=>{
     try{
-    let res = await axios.post('/api/user/logout',{},{withCredentials:true})
+    let res = await api.post('/api/user/logout',{},{withCredentials:true})
     if(res.data.success)
     navigate('/user/login');
     else
@@ -39,7 +39,7 @@ function Orders() {
     const [data, setData] = useState([]);
     useEffect(() => {
       const get_data = async () => {
-        let res = await axios.get('/api/user/get_products', { withCredentials: true });
+        let res = await api.get('/api/user/get_products', { withCredentials: true });
         setDataFound(res.data.products);
       }
       get_data();

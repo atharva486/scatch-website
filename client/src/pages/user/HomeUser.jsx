@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../axios/api';
 import Bar from '../../components/user/sidemenu'
 import Navbar from '../../components/user/navbar'
 import ProductCard from '../../components/user/productCard';
@@ -26,7 +26,7 @@ function HomeUser() {
   }
   const logout = async () => {
     try {
-      let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+      let res = await api.post('/api/user/logout', {}, { withCredentials: true })
       if (res.data.success)
         navigate('/user/login');
       else
@@ -40,13 +40,13 @@ function HomeUser() {
     navigate(`/user/product/${id}`);
   }
   async function cart(id) {
-    let res = await axios.post(`/api/product/add_to_cart/${id}`, { withCredentials: true });
+    let res = await api.post(`/api/product/add_to_cart/${id}`, { withCredentials: true });
   }
   function buy_product(id) {
     navigate(`/user/buy/${id}`);
   }
   const get_data = async () => {
-    let res = await axios.get('/api/product/shop', { withCredentials: true });
+    let res = await api.get('/api/product/shop', { withCredentials: true });
     setDataFound(res.data.products);
   }
   useEffect(() => {
@@ -101,6 +101,7 @@ function HomeUser() {
               <p className="text-4xl font-bold text-red-800 mb-6 tracking-wider drop-shadow-md">Shop The Best Deals</p>
               <div className="flex flex-wrap gap-8 justify-start">
                 {data.map((item) => (
+                  
                   <ProductCard key={item._id} image={item.image} productname={item.productname} price={item.price} description={item.description} details={() => show_details(item._id)} buy={() => buy_product(item._id)} cart={() => cart(item._id)} />
                 ))}
               </div>

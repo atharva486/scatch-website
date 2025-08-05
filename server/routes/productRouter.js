@@ -3,9 +3,6 @@ const router= express.Router();
 const {shop,show,buy,show_seller,change_price,restock,add_to_cart,stock, order_details,product_details} =require('../controllers/productController');
 const {authMiddlewareSeller,authMiddlewareUser} = require('../middlewares/auth');
 
-router.get('/',(req,res)=>{
-    res.send("Hey its working");
-});
 router.get('/shop',shop);
 
 router.get('/:id',show);

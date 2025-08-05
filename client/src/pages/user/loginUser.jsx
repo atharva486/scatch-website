@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import api from '../../axios/api';
 import { useNavigate } from 'react-router-dom';
 import Flashpopup from '../../components/flashpopup';
 function LoginUser() {
@@ -32,7 +32,7 @@ function LoginUser() {
     }
     else {
       try {
-        let res = await axios.post('/api/user/login', { email, password }, { withCredentials: true });
+        let res = await api.post('/api/user/login', { email, password }, { withCredentials: true });
         if (res.data.success == true){
           triggerFlash("LogInned Successfully", "success");
           navigate('/user/homepage');

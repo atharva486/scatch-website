@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../axios/api';
 import Bar from '../../components/seller/sidemenuSeller';
 import Navbar from '../../components/seller/navbar';
 import EditValuesSeller from '../../components/seller/editValuesSeller';
@@ -28,7 +28,7 @@ function ProfileSeller() {
     const change = () => setSideBar(prev => !prev);
     const logout = async () => {
         try {
-            let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+            let res = await api.post('/api/user/logout', {}, { withCredentials: true })
             if (res.data.success)
                 navigate('/user/login');
             else
@@ -43,7 +43,7 @@ function ProfileSeller() {
     }
     const get_data = async () => {
         try {
-            const res = await axios.get('/api/seller/profile', { withCredentials: true });
+            const res = await api.get('/api/seller/profile', { withCredentials: true });
             setFormData(res.data.seller);
         } catch (err) {
             console.log("Error fetching profile:", err);

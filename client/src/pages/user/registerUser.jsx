@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import axios from 'axios'
+import api from '../../axios/api';
 import { useNavigate } from 'react-router-dom';
 import Flashpopup from '../../components/flashpopup';
 
@@ -43,7 +43,7 @@ function RegisterUser() {
     }
 
     try {
-      const res = await axios.post('/api/user/register', formData, { withCredentials: true });
+      const res = await api.post('/api/user/register', formData, { withCredentials: true });
       if (res.data.success === true) {
         triggerFlash("Registered Successfully","success");
         navigate('/user/login');

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { useLocation, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../axios/api';
 import Bar from '../../components/user/sidemenu'
 import Navbar from '../../components/user/navbar'
 import Flashpopup from '../../components/flashpopup';
@@ -22,7 +22,7 @@ function Order_details() {
     }
     const logout = async () => {
         try {
-            let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+            let res = await api.post('/api/user/logout', {}, { withCredentials: true })
             if (res.data.success)
                 navigate('/user/login');
             else
@@ -34,7 +34,7 @@ function Order_details() {
     }
     async function show_details() {
         try {
-            let res = await axios.post('/api/product/order_details', { product_id, date, quantity_used }, { withCredentials: true });
+            let res = await api.post('/api/product/order_details', { product_id, date, quantity_used }, { withCredentials: true });
             if (res.data.success)
                 setData(res.data.data_req);
             else

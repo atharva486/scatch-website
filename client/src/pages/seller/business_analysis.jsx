@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import axios from 'axios'
+import api from '../../axios/api';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Bar from '../../components/seller/sidemenuSeller';
@@ -24,7 +24,7 @@ function Business_dashboard() {
 
   const logout = async ()=>{
     try{
-    let res = await axios.post('/api/user/logout',{},{withCredentials:true})
+    let res = await api.post('/api/user/logout',{},{withCredentials:true})
     if(res.data.success)
     navigate('/user/login');
     else

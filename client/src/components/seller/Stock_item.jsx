@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../axios/api';
 import {BarChart,Bar,ResponsiveContainer,XAxis,YAxis,Tooltip,Cell,CartesianGrid,} from 'recharts';
 
 function Stock_item() {
@@ -8,7 +8,7 @@ function Stock_item() {
 
     useEffect(() => {
     const get_data = async () => {
-      let res = await axios.get('/api/seller/low_stock', { withCredentials: true });
+      let res = await api.get('/api/seller/low_stock', { withCredentials: true });
         setData(res.data.products);
         
     }

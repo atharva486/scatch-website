@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../axios/api';
 import Bar from '../../components/seller/sidemenuSeller';
 import Navbar from '../../components/seller/navbar';
 import Flashpopup from '../../components/flashpopup';
@@ -18,7 +18,7 @@ function AddProduct() {
     const change = () => setSideBar(prev => !prev);
     const logout = async () => {
         try {
-            let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+            let res = await api.post('/api/user/logout', {}, { withCredentials: true })
             if (res.data.success)
                 navigate('/user/login');
             else
@@ -45,7 +45,7 @@ function AddProduct() {
         data.append('description', formData.description);
         data.append('image', formData.image);
         data.append('stock', formData.stock);
-        let res = await axios.post('/api/seller/create', data, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } });
+        let res = await api.post('/api/seller/create', data, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } });
         if (res.data.success == true) {
             triggerFlash("Product Added Succesfully!!!","success");
         }

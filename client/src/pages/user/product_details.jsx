@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
 import { useLocation, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../axios/api';
 import Bar from '../../components/user/sidemenu'
 import Navbar from '../../components/user/navbar'
 import Flashpopup from '../../components/flashpopup';
@@ -20,7 +20,7 @@ function Product_details() {
         }
         const logout = async () => {
             try{
-            let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+            let res = await api.post('/api/user/logout', {}, { withCredentials: true })
             if(res.data.success)
             navigate('/user/login');
             else
@@ -33,7 +33,7 @@ function Product_details() {
         async function show_details() {
             try {
 
-                let res = await axios.get(`/api/product/product_details/${product_id}`, { withCredentials: true });
+                let res = await api.get(`/api/product/product_details/${product_id}`, { withCredentials: true });
 
                 if(res.data.success)
                 setData(res.data.product);
@@ -65,7 +65,7 @@ return (
             <form className="flex flex-col gap-4">
               <div className="flex flex-col items-center">
                 <img
-                  src={`http://localhost:3000/images/${data.image}`}
+                  src={`https://res.cloudinary.com/dunxugggm/image/upload/${data.image}`}
                   alt="image_Product"
                   className="w-96 h-96 object-contain rounded-lg shadow"
                 />

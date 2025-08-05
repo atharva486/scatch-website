@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import axios from 'axios'
+import api from '../../axios/api';
 import { useNavigate } from 'react-router-dom';
 import Flashpopup from '../flashpopup';
 
@@ -16,7 +16,7 @@ function EditValuesUser({Value,originalVal,onClose,triggerFlash,getdata}) {
 
   const handleNewVal = async () => {
   try {
-    let res = await axios.post(
+    let res = await api.post(
       `/api/user/edit/${Value}`,
       { newVal },
       { withCredentials: true }
@@ -34,7 +34,7 @@ function EditValuesUser({Value,originalVal,onClose,triggerFlash,getdata}) {
   const checkPassword = async ()=>{
     let prevpass=passref.current?.value;
     try{
-    let res = await axios.post(`/api/user/check_password`,{prevpass},{withCredentials:true})
+    let res = await api.post(`/api/user/check_password`,{prevpass},{withCredentials:true})
     if(!res.data.result)
       triggerFlash_pass("Pls Enter Correct Password to Change it","error");
     else

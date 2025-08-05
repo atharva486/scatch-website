@@ -1,14 +1,14 @@
 const mongoose=require('mongoose');
+require('dotenv').config(); 
 const config = require('config');
 const ObjectId = mongoose.Types.ObjectId;
 const dbgr = require("debug")("development:mongoose");
-mongoose
-.connect(`${config.get("MONGODB_URI")}/scatch`)
-.then(function(){
-    dbgr("connected");
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 })
-.catch(function(){
-    dbgr(" disconnected");
-})
+.then(() => console.log("✅ Connected to MongoDB Atlas"))
+.catch((err) => console.error("❌ MongoDB connection error:", err));
+
 
 module.exports = mongoose.connection;

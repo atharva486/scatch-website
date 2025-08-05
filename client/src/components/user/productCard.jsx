@@ -1,11 +1,12 @@
 import React from 'react';
 
 function ProductCard({ image, productname, price, description, buy, details, cart }) {
+  
   return (
     <div className="w-64 rounded-2xl shadow-lg  border bg-[#FDEFEF] border-gray-200 hover:shadow-2xl transition duration-300">
       <img
         className="h-48 w-full object-cover rounded-t-2xl"
-        src={`http://localhost:3000/images/${image}`}
+        src={`https://res.cloudinary.com/dunxugggm/image/upload/${image}`}
         alt="product"
       />
       <div className="p-4 flex flex-col gap-2">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import api from '../../axios/api';
 import { useNavigate } from 'react-router-dom';
 import Flashpopup from '../../components/flashpopup';
 
@@ -27,7 +27,7 @@ function LoginSeller() {
           triggerFlash("Enter all the fields to Login","error");
         else{
             try{
-            let res = await axios.post('/api/seller/login',{email,password,"seller":true},{withCredentials:true});
+            let res = await api.post('/api/seller/login',{email,password,"seller":true},{withCredentials:true});
             if(!res.data.user)
               triggerFlash("U havent Registered Yet!!!","error");
             else{

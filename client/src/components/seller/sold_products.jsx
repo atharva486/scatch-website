@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../axios/api';
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Cell} from 'recharts';
 
 function Sold_products() {
   const [data,setData] = useState([]);
   useEffect(()=>{
     const get_data = async ()=>{
-      let res = await axios.get('/api/seller/prod_quantity',{withCredentials:true});
+      let res = await api.get('/api/seller/prod_quantity',{withCredentials:true});
       setData(res.data.data_req);
     }
     get_data();

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../../axios/api';
 import React, { useEffect, useState } from 'react'
 import { useParams,useNavigate  } from 'react-router-dom';
 import Bar from '../../components/seller/sidemenuSeller';
@@ -20,7 +20,7 @@ function ShowProduct() {
     }
     const logout = async ()=>{
     try{
-    let res = await axios.post('/api/user/logout',{},{withCredentials:true})
+    let res = await api.post('/api/user/logout',{},{withCredentials:true})
     if(res.data.success)
     navigate('/user/login');
     else
@@ -33,7 +33,7 @@ function ShowProduct() {
     
     const get_data = async ()=>{
         try{
-            let res = await axios.get(`/api/product/show_seller/${product_id}`,{withCredentials:true});
+            let res = await api.get(`/api/product/show_seller/${product_id}`,{withCredentials:true});
             setData(res.data.product);
             let stock = res.data.stock_left;
             setData(prev=>({...prev,stock:stock}));

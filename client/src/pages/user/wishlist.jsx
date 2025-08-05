@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../axios/api';
 import { useNavigate } from 'react-router-dom';
 import Bar from '../../components/user/sidemenu';
 import Navbar from '../../components/user/navbar';
@@ -24,7 +24,7 @@ function Wishlist() {
     }
     const logout = async () => {
         try {
-            let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+            let res = awapi.post('/api/user/logout', {}, { withCredentials: true })
             if (res.data.success)
                 navigate('/user/login');
             else
@@ -37,7 +37,7 @@ function Wishlist() {
     const [data, setData] = useState([]);
     async function delete_data(id) {
         try {
-            let res = await axios.post(`/api/user/delete/wishlist_item/${id}`, { id }, { withCredentials: true });
+            let res = await api.post(`/api/user/delete/wishlist_item/${id}`, { id }, { withCredentials: true });
             if (res.data.success) {
                 get_data();
                 triggerFlash("Deleted Successfully", "error");
@@ -51,7 +51,7 @@ function Wishlist() {
 
     }
     const get_data = async () => {
-        let res = await axios.get('/api/user/wishlist_products', { withCredentials: true });
+        let res = await api.get('/api/user/wishlist_products', { withCredentials: true });
         setDataFound(res.data.products);
     }
     useEffect(() => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import axios from 'axios'
+import api from '../../axios/api'
 import Bar from '../../components/user/sidemenu'
 import Navbar from '../../components/user/navbar'
 import Flashpopup from '../../components/flashpopup'
@@ -27,7 +27,7 @@ function Buy() {
 
   const logout = async () => {
     try {
-      let res = await axios.post('/api/user/logout', {}, { withCredentials: true })
+      let res = await api.post('/api/user/logout', {}, { withCredentials: true })
       if (res.data.success) navigate('/user/login')
       else triggerFlash("Not Able to Logout", "error")
     } catch {
@@ -46,7 +46,7 @@ function Buy() {
 
   const buy = async () => {
     try {
-      let res = await axios.post(`/api/product/buy/${id}`, { quantity, data, address }, { withCredentials: true })
+      let res = await api.post(`/api/product/buy/${id}`, { quantity, data, address }, { withCredentials: true })
       if (res.data.success) navigate('/user/homepage')
       else triggerFlash("Not able to buy. Try after sometime", "error")
     } catch {
@@ -56,7 +56,7 @@ function Buy() {
 
   async function show_details(id) {
     try {
-      let res = await axios.get(`/api/product/${id}`, { withCredentials: true })
+      let res = await api.get(`/api/product/${id}`, { withCredentials: true })
       if (res.data.success) {
         setStock_used(res.data.quantity_used)
         setData(res.data.product)
@@ -86,7 +86,7 @@ function Buy() {
 
             <form className="flex flex-col gap-6">
               <div>
-                <img src={`http://localhost:3000/images/${data.image}`} alt="Product" className='w-120 h-80 object-cover rounded-xl shadow-lg border border-[#e9456044]' />
+                <img src={`https://res.cloudinary.com/dunxugggm/image/upload/${data.image}`} alt="Product" className='w-120 h-80 object-cover rounded-xl shadow-lg border border-[#e9456044]' />
               </div>
 
               <div className="flex flex-col gap-1">

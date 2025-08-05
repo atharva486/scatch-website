@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../axios/api';
 import Bar from '../../components/user/sidemenu';
 import Navbar from '../../components/user/navbar';
 import EditValuesUser from '../../components/user/editValues';
@@ -25,7 +25,7 @@ function ProfileUser() {
     const change = () => setSideBar(prev => !prev);
     const logout = async ()=>{
         try{
-        let res = await axios.post('/api/user/logout',{},{withCredentials:true})
+        let res = await api.post('/api/user/logout',{},{withCredentials:true})
         if(res.data.success)
         navigate('/user/login');
         else
@@ -40,7 +40,7 @@ function ProfileUser() {
       }
     const get_data = async () => {
         try{
-        let res = await axios.get('/api/user/profile', { withCredentials: true });
+        let res = await api.get('/api/user/profile', { withCredentials: true });
         setFormData(res.data.user);
         }
         catch(err){
