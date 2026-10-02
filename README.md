@@ -132,11 +132,12 @@ npx vite build          # production build
 
 ## 🚢 Deployment
 
-**See [DEPLOYMENT.md](./DEPLOYMENT.md)** for the current live status, what is
-blocking a working deployment, and the step-by-step fix.
+**See [DEPLOYMENT.md](./DEPLOYMENT.md)** for the current live status and
+**[ATLAS_SETUP.md](./ATLAS_SETUP.md)** for creating the MongoDB Atlas database
+and wiring it to Render.
 
-In short: the frontend is on Vercel, the backend on Render, and the two things
-that need doing are the Vercel SPA rewrite (so deep links work) and a Render
-redeploy (so the backend runs the current code).
+In short: the frontend is on Vercel, the backend on Render, and the backend
+cannot deploy until a MongoDB Atlas connection string is set on Render — the
+original cluster was deleted.
 
 ---

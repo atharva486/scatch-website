@@ -15,12 +15,18 @@ assumed.
 |---|---|---|
 | GitHub repo | **Live** | `github.com/atharva486/scatch-website`, commit `90f6e1b` |
 | Vercel (frontend) | **Deployed, working** | New build live, deep links fixed |
-| Render (backend) | **Not deployed** | Still running the pre-fix code from August |
-| MongoDB | **Reachable but empty** | Render has a working URI; no users or products in it |
+| Render (backend) | **Deploy fails** | `MONGODB_URI` still points at the deleted Atlas cluster |
+| MongoDB | **Gone** | `scatch-prod.ciaaonh.mongodb.net` is NXDOMAIN. Needs a new cluster. |
 | Cloudinary images | **Working** | Account `dunxugggm` is live, all seed images return 200 |
 
-One thing blocks a working site: **redeploying Render**, which needs dashboard
-access. The Vercel SPA rewrite is fixed and verified.
+**Fix in order:** create a new Atlas cluster → set `MONGODB_URI` on Render →
+redeploy → seed. Full instructions in [ATLAS_SETUP.md](./ATLAS_SETUP.md).
+
+⚠️ A failing deploy is **not** the same as an unreachable database, but they
+look identical from the API. Requests to the old backend return `{"success":false}`
+in ~0.3s because DNS fails immediately and the old controller's `catch` block
+swallows the error. That fast failure reads like a healthy empty database. It
+is not one — there is no database at all. See "Database" below.
 
 ---
 
@@ -79,16 +85,27 @@ So the old code is live: its `POST /api/user/login` returns
 `{"success":false}` with HTTP 200, which is the old handler's response shape.
 The new code returns HTTP 401.
 
-### Database — connected, empty
+### Database — does not exist
 
-The backend answers in ~0.4s, which means Mongoose is not buffering (an
-unreachable database produces a ~10s stall followed by HTTP 500). So Render has
-a working `MONGODB_URI`. But login returns `success:false` and the products
-listing returns `success:false`, i.e. **there is no data in it** — no users, no
-products, no orders.
+`MONGODB_URI` on Render still points at the original Atlas cluster, which was
+deleted. The hostname does not resolve:
 
-This is the expected consequence of the original Atlas cluster being deleted.
-A new, empty cluster is now attached.
+```
+$ host scatch-prod.ciaaonh.mongodb.net
+Host scatch-prod.ciaaonh.mongodb.net not found: 3(NXDOMAIN)
+```
+
+Because DNS fails in ~0.3s and the old controllers wrap every query in a
+`catch` that returns `{"success":false}`, the API *appears* to be working. Every
+call looks like "no data" rather than "no database". This is why login, the
+products listing and registration all return `{"success":false}` with HTTP 200.
+
+To fix: create a new cluster and update the variable. See
+[ATLAS_SETUP.md](./ATLAS_SETUP.md).
+
+The new server code makes this failure obvious instead of silent — it refuses to
+boot in production without `MONGODB_URI`, and `/api/health` reports the database
+state, so this specific class of problem cannot recur unnoticed.
 
 ### Images — working
 
@@ -159,35 +176,21 @@ Re-verified after deploy — every path now returns 200 and serves the SPA shell
 
 ---
 
-## Blocker 2 — Render has not been redeployed
+## Blocker 2 — Render deploys fail on the database
 
-This one needs dashboard access, because it depends on how the service is
-configured.
+**This needs dashboard access.** The deploy fails at startup because
+`MONGODB_URI` references a deleted cluster. Full walkthrough, including the
+Atlas console steps, is in [ATLAS_SETUP.md](./ATLAS_SETUP.md).
 
-### Steps
+Short version:
 
-1. Open the Render dashboard → the `scatch-website` web service.
-2. Confirm **Auto-Deploy** is set to **On** for pushes to `master`. If it is
-   off, turn it on, or use **Manual Deploy → Deploy latest commit**.
-3. Watch the deploy log. It should end with a line confirming it connected to
-   MongoDB.
-4. Verify:
-
-   ```bash
-   curl -i https://scatch-website.onrender.com/api/health
-   ```
-
-   Expect `HTTP/2 200`. A `404` means the old code is still running.
-
-5. Confirm the new JSON 404 handler is live:
-
-   ```bash
-   curl -X POST -H 'Content-Type: application/json' -d '{}' \
-     https://scatch-website.onrender.com/api/definitely-not-a-route
-   ```
-
-   Expect `{"success":false,"error":"Endpoint not found"}`. HTML `Cannot POST`
-   means the old code is still live.
+1. Create a free M0 cluster at <https://cloud.mongodb.com>.
+2. Add a database user with **Read and write to any database**.
+3. Network Access → add `0.0.0.0/0` (Render has no fixed outbound IP).
+4. Connect → Drivers → Node.js → copy the connection string.
+5. Render → Environment → set `MONGODB_URI` to it → Save.
+6. Manual Deploy → Deploy latest commit.
+7. Verify `/api/health` returns 200, then seed the data.
 
 ### Environment variables to check on Render
 
