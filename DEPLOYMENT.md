@@ -13,13 +13,14 @@ assumed.
 
 | Piece | Status | Notes |
 |---|---|---|
-| GitHub repo | **Live** | `github.com/atharva486/scatch-website`, commit `064a2ee` |
-| Vercel (frontend) | **Deployed, but deep links broken** | Serving the new build; every route except `/` returns 404 |
+| GitHub repo | **Live** | `github.com/atharva486/scatch-website`, commit `90f6e1b` |
+| Vercel (frontend) | **Deployed, working** | New build live, deep links fixed |
 | Render (backend) | **Not deployed** | Still running the pre-fix code from August |
 | MongoDB | **Reachable but empty** | Render has a working URI; no users or products in it |
 | Cloudinary images | **Working** | Account `dunxugggm` is live, all seed images return 200 |
 
-Two things block a working site: the Vercel SPA rewrite, and redeploying Render.
+One thing blocks a working site: **redeploying Render**, which needs dashboard
+access. The Vercel SPA rewrite is fixed and verified.
 
 ---
 
@@ -131,7 +132,7 @@ if you land on the root URL and click through, and breaks on **any refresh,
 bookmark, shared link, or direct navigation**. Because the order detail page
 reads its id from the URL, that one is affected too.
 
-**Status: fixed in the repository.** `vercel.json` now contains the rewrite:
+**Status: fixed and verified live.** `vercel.json` now contains the rewrite:
 
 ```json
 {
@@ -144,6 +145,17 @@ reads the config from whichever directory is set as the project's **Root
 Directory**, and that setting is not visible from the code. Whichever one Vercel
 reads, the rewrite applies. Once the deployment is confirmed working, delete
 whichever of the two is not being used.
+
+Re-verified after deploy — every path now returns 200 and serves the SPA shell:
+
+```
+/                            -> 200
+/user/login                  -> 200
+/user/homepage               -> 200
+/user/order_details/abc123   -> 200
+/seller/dashboard            -> 200
+/totally-bogus               -> 200   (renders the app's NotFound page)
+```
 
 ---
 
