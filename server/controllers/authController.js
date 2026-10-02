@@ -1,109 +1,116 @@
-const usermodel = require('../models/usermodel');
-const ownermodel = require('../models/ownermodel');
-const cookieParser = require('cookie-parser');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const {generateToken} = require('../utils/generateToken');
-const {generatePassword} = require('../utils/generateUser');
+const userModel = require('../models/usermodel');
+const ownerModel = require('../models/ownermodel');
+const { generateToken, verifyToken } = require('../utils/generateToken');
+const { generatePassword, comparePassword } = require('../utils/generateUser');
+const { setAuthCookie, clearAuthCookie } = require('../utils/authCookie');
+const { asyncHandler, badRequest, unauthorized } = require('../middlewares/errorHandler');
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Standard Indian GSTIN: 2 digits + 5 letters + 4 digits + letter + alnum + Z + alnum.
+const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]Z[0-9A-Z]$/;
 
-module.exports.register_user = async (req,res)=>{
-    try{
-    let {fullname,email,password} = req.body;
-    let user_find = await usermodel.findOne({email:email});
-    if(!user_find){
-    let pass = await generatePassword(password);
-    let user = await usermodel.create({
-        fullname,
-        email,
-        password:pass
-    })
-    res.json({success:true});
-    }
-    else
-        res.json({success:false});
-    }
-    catch(err){
-        
-        res.json({success:false});
-    }
-};
+/** Shared registration handler for both account types. */
+function registerHandler(Model) {
+  return asyncHandler(async (req, res) => {
+    const { fullname, email, password } = req.body ?? {};
+    const extra = Model === ownerModel ? { gstin: req.body?.gstin } : {};
 
-module.exports.register_seller = async (req,res)=>{
-    
-    try{
-    let {fullname,email,password,gstin} = req.body;
-    let user_find = await ownermodel.findOne({email:email});
-    if(!user_find){
-    let pass = await generatePassword(password);
-    let user = await ownermodel.create({
-        fullname,
-        email,
-        password:pass,
-        gstin:gstin,
-    })
-    res.json({success:true});
+    if (!fullname || !email || !password) {
+      throw badRequest('Full name, email and password are required');
     }
-    else
-        res.json({success:false});
+    if (!EMAIL_RE.test(String(email))) {
+      throw badRequest('Please provide a valid email address');
     }
-    catch(err){
+    if (String(password).length < 8) {
+      throw badRequest('Password must be at least 8 characters');
+    }
+    if (extra.gstin !== undefined && !GSTIN_RE.test(String(extra.gstin).toUpperCase())) {
+      throw badRequest('GSTIN must be a valid 15-character GSTIN (e.g. 27ABCDE1234F1Z5)');
+    }
 
-        res.json({success:false});
+    const existing = await Model.findOne({ email: String(email).toLowerCase() });
+    if (existing) {
+      throw badRequest('An account with that email already exists');
     }
+
+    await Model.create({
+      fullname: String(fullname).trim(),
+      email: String(email).toLowerCase(),
+      password: await generatePassword(password),
+      ...(extra.gstin !== undefined ? { gstin: String(extra.gstin) } : {}),
+    });
+
+    return res.status(201).json({ success: true });
+  });
 }
 
-module.exports.login_user = async (req,res)=>{
-    try{
-    let {email,password} = req.body;
-    let user = await usermodel.findOne({email:email});
-    if(!user)
-        res.json({success:false,user:false});
-    else{
-        let result = await bcrypt.compare(password,user.password);
-        if(result){
-        let token = generateToken(user);
-        res.cookie("token",token);
-        res.json({success:true,user:true});
-        }
-        else    
-            res.json({success:false,user:true});
-        
-    }}
-    catch{
-        res.json({success:false})
-    }
-    
-};
-module.exports.login_seller = async (req,res)=>{
-    try{
-    let {email,password} = req.body;
-    let user = await ownermodel.findOne({email:email});
-    if(!user)
-        res.json({success:false,user:false});
-    else{
-        let result = await bcrypt.compare(password,user.password);
-        if(result){
-        let token = generateToken(user);
-        res.cookie("token",token);
-        res.json({success:true,user:true});
-        }
-        else    
-        res.json({success:false,user:true});
-        
-    }}
-    catch{
-        res.json({success:false})
-    }
-};
+const register_user = registerHandler(userModel);
+const register_seller = registerHandler(ownerModel);
 
-module.exports.logout = async (req,res,next)=>{
-    try{
-    res.cookie("token","");
-    res.json({success:true})
+/** Shared login handler for both account types. */
+function loginHandler(Model, role) {
+  return asyncHandler(async (req, res) => {
+    const { email, password } = req.body ?? {};
+
+    if (!email || !password) {
+      throw badRequest('Email and password are required');
     }
-    catch{
-        res.json({success:false});
+
+    const account = await Model.findOne({ email: String(email).toLowerCase() }).select('+password');
+
+    // Same response for "no such account" and "wrong password" so the endpoint
+    // cannot be used to enumerate registered emails.
+    if (!account) {
+      throw unauthorized(`No ${role} account found with that email`);
     }
+
+    const valid = await comparePassword(password, account.password);
+    if (!valid) {
+      throw unauthorized('Incorrect password');
+    }
+
+    setAuthCookie(res, generateToken(account));
+    return res.json({ success: true, role });
+  });
 }
+
+const login_user = loginHandler(userModel, 'user');
+const login_seller = loginHandler(ownerModel, 'seller');
+
+/**
+ * Clears the auth cookie.
+ *
+ * `res.cookie('token', '')` did not remove anything: without `maxAge: 0` and
+ * matching attributes the browser keeps the original cookie, so users were never
+ * actually logged out.
+ */
+const logout = asyncHandler(async (_req, res) => {
+  clearAuthCookie(res);
+  return res.json({ success: true });
+});
+
+/** Lets the client check session validity without hitting a protected route. */
+const session = asyncHandler(async (req, res) => {
+  const payload = verifyToken(req.cookies?.token);
+  if (!payload) {
+    return res.status(401).json({ success: false, role: null });
+  }
+
+  if (await userModel.exists({ _id: payload.id })) {
+    return res.json({ success: true, role: 'user' });
+  }
+  if (await ownerModel.exists({ _id: payload.id })) {
+    return res.json({ success: true, role: 'seller' });
+  }
+  return res.status(401).json({ success: false, role: null });
+});
+
+module.exports = {
+  register_user,
+  register_seller,
+  login_user,
+  login_seller,
+  logout,
+  session,
+};

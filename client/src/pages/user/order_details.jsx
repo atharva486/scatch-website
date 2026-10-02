@@ -1,100 +1,167 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
-import { useLocation, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import api from '../../axios/api';
-import Bar from '../../components/user/sidemenu'
-import Navbar from '../../components/user/navbar'
-import Flashpopup from '../../components/flashpopup';
+import Bar from '../../components/user/sidemenu';
+import Navbar from '../../components/user/navbar';
+import useLogout from '../../utils/useLogout';
+import ProductImage from '../../components/ProductImage';
 
+/**
+ * Single order view.
+ *
+ * Three bugs here:
+ *   - `navigate` was called in the logout handler but never imported, so
+ *     logging out from this page threw a ReferenceError;
+ *   - the order was looked up by product + quantity + formatted date passed
+ *     through `location.state`, which is ambiguous and gone on refresh;
+ *   - the image src was hardcoded to `http://localhost:3000/images/`, so no
+ *     image ever loaded outside the developer's machine.
+ *
+ * The route now carries the order id, and image URLs are built by `imageUrl`.
+ */
 function Order_details() {
+  const { order_id: orderId } = useParams();
+  const [sideBar, setSideBar] = useState(false);
+  const logout = useLogout();
 
-    const [data, setData] = useState({});
-    const { state } = useLocation();
-    const { product_id, date, quantity_used } = state || {};
-    const [sideBar, setSideBar] = useState(false);
-    const [flashPopup, setFlashPopup] = useState({ visible: false, message: "", type: "" });
-    const triggerFlash = (message, type) => {
-        setFlashPopup({ visible: true, message, type });
-        setTimeout(() => setFlashPopup({ ...flashPopup, visible: false }), 1000);
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!orderId) {
+      setError('No order was selected.');
+      setLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    api
+      .post('/api/product/order_details', { order_id: orderId })
+      .then((res) => {
+        if (!cancelled) setOrder(res.data.order);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.friendlyMessage || 'Could not load this order.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
     };
-    const change = () => {
-        setSideBar(prev => (!prev))
-    }
-    const logout = async () => {
-        try {
-            let res = await api.post('/api/user/logout', {}, { withCredentials: true })
-            if (res.data.success)
-                navigate('/user/login');
-            else
-                triggerFlash("Not Able to Logout", "error");
-        }
-        catch (err) {
-            triggerFlash("Not Able to Logout", "error");
-        }
-    }
-    async function show_details() {
-        try {
-            let res = await api.post('/api/product/order_details', { product_id, date, quantity_used }, { withCredentials: true });
-            if (res.data.success)
-                setData(res.data.data_req);
-            else
-                triggerFlash("Not Able to Load Page.PLease Try Again Later", "error");
-        } catch (err) {
-            triggerFlash("Failed to fetch the order details.PLease try Again", "error");
+  }, [orderId]);
 
-        }
-    }
+  return (
+    <div className="w-full min-h-screen flex bg-[#FDEFEF]">
+      <div className="flex flex-col flex-1">
+        <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
-    useEffect(() => { show_details() }, []);
+        <div className="flex flex-row flex-1 w-full">
+          <Bar sidebar={sideBar} />
 
-    return (
-        <>
-            <Flashpopup visible={flashPopup.visible} message={flashPopup.message} type={flashPopup.type} />
-            <div className='w-full min-h-screen flex bg-[#FDEFEF] text-white'>
-                <div className="flex flex-col flex-1">
-                    <Navbar change={change} logout={logout} f={0} />
-                    <div className="flex flex-row flex-1 w-full">
-                        <Bar sidebar={sideBar} />
-                        <div className="mx-8 my-6 w-full bg-gradient-to-r from-sky-400 to-sky-800 text-black rounded-3xl shadow-2xl p-10 border border-[#0F346015]">
-                            <p className="text-4xl font-bold text-red-800 mb-8 tracking-wide drop-shadow-sm">Order History</p>
-                            <form className="flex flex-col gap-5">
-                                <div className="flex flex-col items-center">
-                                    <img src={`http://localhost:3000/images/${data.image}`} alt="image_Product" className='w-80 h-80 object-contain rounded-xl shadow' />
-                                </div>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="flex flex-col">
-                                        <label className="text-md text-[#0F3460]">Product Name</label>
-                                        <input type="text" name='productname' value={data.productname || ""} className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 focus:outline-none focus:ring-2 focus:ring-[#E94560]" disabled />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <label className="text-md text-[#0F3460]">Price (in ₹)</label>
-                                        <input type="number" name='price' value={data.price || ""} className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 focus:outline-none focus:ring-2 focus:ring-[#E94560]" disabled />
-                                    </div>
-                                    <div className="flex flex-col col-span-2">
-                                        <label className="text-md text-[#0F3460]">Description</label>
-                                        <textarea value={data.description || ""} name='description' className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 resize-none focus:outline-none focus:ring-2 focus:ring-[#E94560]" disabled />
-                                    </div>
-                                    <div className="flex flex-col col-span-2">
-                                        <label className="text-md text-[#0F3460]">Address</label>
-                                        <textarea name='address' value={data.address || ""} className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 resize-none focus:outline-none focus:ring-2 focus:ring-[#E94560]" disabled />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <label className="text-md text-[#0F3460]">Order Date</label>
-                                        <input type="text" name='date' value={data.date || ""} className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 focus:outline-none focus:ring-2 focus:ring-[#E94560]" disabled />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <label className="text-md text-[#0F3460]">Quantity U Bought</label>
-                                        <input type='number' value={data.quantity_used || ''} name='quantity' className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 focus:outline-none focus:ring-2 focus:ring-[#E94560]" disabled />
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+          <div className="mx-8 my-6 w-full bg-gradient-to-r from-sky-400 to-sky-800 text-black rounded-3xl shadow-2xl p-10 border border-[#0F346015]">
+            <p className="text-4xl font-bold text-red-800 mb-8 tracking-wide">Order Details</p>
+
+            {loading && <p className="text-lg">Loading order…</p>}
+
+            {!loading && error && (
+              <p className="text-lg text-red-900">
+                {error}. <Link className="underline" to="/user/orders">Back to orders</Link>
+              </p>
+            )}
+
+            {!loading && !error && order && (
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col items-center">
+                  <ProductImage
+                    src={order.image}
+                    alt={order.productname || 'product'}
+                    className="w-80 h-80 object-contain rounded-xl shadow bg-white/40"
+                  />
                 </div>
-            </div>
-        </>
-    )
 
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="flex flex-col">
+                    <label className="text-md text-[#0F3460]">Product Name</label>
+                    <input
+                      type="text"
+                      value={order.productname || ''}
+                      readOnly
+                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
+                    />
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="text-md text-[#0F3460]">Price paid per unit (₹)</label>
+                    <input
+                      type="number"
+                      value={order.price ?? ''}
+                      readOnly
+                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
+                    />
+                  </div>
+
+                  <div className="flex flex-col col-span-2">
+                    <label className="text-md text-[#0F3460]">Description</label>
+                    <textarea
+                      value={order.description || ''}
+                      readOnly
+                      rows={3}
+                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col col-span-2">
+                    <label className="text-md text-[#0F3460]">Address</label>
+                    <textarea
+                      value={order.address || ''}
+                      readOnly
+                      rows={2}
+                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="text-md text-[#0F3460]">Order Date</label>
+                    <input
+                      type="text"
+                      value={order.orderedAt ? new Date(order.orderedAt).toLocaleString() : ''}
+                      readOnly
+                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
+                    />
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="text-md text-[#0F3460]">Quantity bought</label>
+                    <input
+                      type="number"
+                      value={order.quantity ?? ''}
+                      readOnly
+                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
+                    />
+                  </div>
+
+                  <div className="flex flex-col col-span-2">
+                    <label className="text-md text-[#0F3460]">Order total (₹)</label>
+                    <input
+                      type="number"
+                      value={(order.price ?? 0) * (order.quantity ?? 0)}
+                      readOnly
+                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export default Order_details
+export default Order_details;

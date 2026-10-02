@@ -1,112 +1,116 @@
-import React, { useState } from 'react'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../axios/api';
-import { useNavigate } from 'react-router-dom';
-import Flashpopup from '../../components/flashpopup';
+import { useFlash } from '../../context/FlashContext';
 
 function RegisterUser() {
-  const [flashPopup,setFlashPopup] = useState({visible:false,message: "",type:""});
-    const triggerFlash = (message, type) => {
-      setFlashPopup({ visible: true, message, type });
-      setTimeout(() => setFlashPopup({ ...flashPopup, visible: false }), 1000); 
-    };
   const navigate = useNavigate();
-  const login = () => {
-    navigate('/user/login');
-  }
-  const register = ()=>{
-    navigate('/seller/register');
-  }
+  const { triggerFlash } = useFlash();
 
-  const [formData, setFormData] = useState({
-    fullname: '',
-    email: '',
-    password: ''
-  });
-  const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  }
+  const [formData, setFormData] = useState({ fullname: '', email: '', password: '' });
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (submitting) return;
+
     const { fullname, email, password } = formData;
-    if (!fullname || !email || !password) {
-      triggerFlash("All fields are required!","error");
+    if (!fullname.trim() || !email.trim() || !password) {
+      triggerFlash('All fields are required.', 'error');
       return;
     }
-
     if (!email.includes('@')) {
-      triggerFlash("Invalid email address","error");
+      triggerFlash('Invalid email address', 'error');
+      return;
+    }
+    if (password.length < 8) {
+      triggerFlash('Password must be at least 8 characters.', 'error');
       return;
     }
 
+    setSubmitting(true);
     try {
-      const res = await api.post('/api/user/register', formData, { withCredentials: true });
-      if (res.data.success === true) {
-        triggerFlash("Registered Successfully","success");
-        navigate('/user/login');
+      const res = await api.post('/api/user/register', {
+        fullname: fullname.trim(),
+        email: email.trim(),
+        password,
+      });
+      if (res.data.success) {
+        triggerFlash('Registered successfully', 'success');
+        navigate('/user/login', { replace: true });
       } else {
-        if(!res.data.error)
-        triggerFlash("Email is already used","error");
-        else
-        triggerFlash("Server error","error");
+        triggerFlash(res.data.error || 'Could not create the account.', 'error');
       }
     } catch (err) {
-      triggerFlash("Something Went Wrong","error");
+      triggerFlash(err.friendlyMessage || 'Something went wrong.', 'error');
+    } finally {
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
-    <div className='h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-25 items-center'>
-      <Flashpopup visible={flashPopup.visible} message={flashPopup.message} type={flashPopup.type} />
-      <div className='w-full flex justify-between px-5'>
-        <div className='text-xl rounded-2xl px-2 '>Create a New Account?
-        <button className='text-xl rounded-2xl px-2 text-blue-500  hover:cursor-pointer' onClick={register}>Register</button></div>
-        <div className='text-xl rounded-2xl px-2 '>
-        <button
-          className='text-2xl  rounded-2xl px-2  text-blue-600 hover:cursor-pointer'
-          onClick={login}
-        >Login</button></div>
+    <div className="min-h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-10 items-center">
+      <div className="w-full flex justify-between px-5">
+        <div className="text-xl rounded-2xl px-2">
+          Create a new account?{' '}
+          <Link className="text-xl text-blue-500 hover:underline" to="/seller/register">
+            Register as a seller
+          </Link>
+        </div>
+        <div className="text-xl rounded-2xl px-2">
+          <Link className="text-2xl text-blue-600 hover:underline" to="/user/login">
+            Login
+          </Link>
+        </div>
       </div>
 
-      <div className='w-1/2 h-1/2 flex flex-col justify-top gap-2 pt-5 rounded-4xl'>
-        <div className='w-full mx-auto text-2xl font-bold text-black'>
-          Welcome to <span className='text-blue-600 text-4xl'>Scatch</span><br />
-          Create Your Account
+      <div className="w-1/2 flex flex-col gap-6 pt-5 rounded-4xl">
+        <div className="w-full mx-auto text-2xl font-bold text-black">
+          Welcome to <span className="text-blue-600 text-4xl">Scatch</span>
+          <br />
+          Create your account
         </div>
 
-        <form className='m-0 p-0 w-3/4 flex flex-col gap-3' onSubmit={submit}>
+        <form className="m-0 p-0 w-3/4 flex flex-col gap-3" onSubmit={submit}>
           <input
             type="text"
             name="fullname"
-            placeholder='Full Name'
-            onChange={handleChange}
+            autoComplete="name"
+            placeholder="Full Name"
             value={formData.fullname}
-            className='bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold'
+            onChange={handleChange}
+            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
           />
           <input
             type="email"
             name="email"
-            placeholder='Email'
-            onChange={handleChange}
+            autoComplete="email"
+            placeholder="Email"
             value={formData.email}
-            className='bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold'
+            onChange={handleChange}
+            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
           />
           <input
             type="password"
             name="password"
-            placeholder='Password'
-            onChange={handleChange}
+            autoComplete="new-password"
+            placeholder="Password (min 8 characters)"
             value={formData.password}
-            className='bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold'
+            onChange={handleChange}
+            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
           />
-          <input
+          <button
             type="submit"
-            value='Create My Account'
-            className='mx-auto w-fit bg-blue-700 hover:bg-blue-900 px-4 rounded-4xl h-10 text-2xl text-white font-semibold hover:cursor-pointer'
-          />
+            disabled={submitting}
+            className="mx-auto w-fit bg-blue-700 hover:bg-blue-900 disabled:bg-blue-400 px-4 rounded-4xl h-10 text-xl text-white font-semibold hover:cursor-pointer"
+          >
+            {submitting ? 'Creating account…' : 'Create My Account'}
+          </button>
         </form>
       </div>
     </div>

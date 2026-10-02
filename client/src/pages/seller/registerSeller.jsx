@@ -1,121 +1,132 @@
-import React, { useState } from 'react'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../axios/api';
-import { useNavigate } from 'react-router-dom';
-import Flashpopup from '../../components/flashpopup';
+import { useFlash } from '../../context/FlashContext';
+
+const EMPTY = { fullname: '', email: '', password: '', gstin: '' };
 
 function RegisterSeller() {
-  const [flashPopup,setFlashPopup] = useState({visible:false,message: "",type:""});
-  const triggerFlash = (message, type) => {
-    setFlashPopup({ visible: true, message, type });
-    setTimeout(() => setFlashPopup({ ...flashPopup, visible: false }), 1000); 
-  };
   const navigate = useNavigate();
-  const login = () => {
-    navigate('/seller/login');
-  }
+  const { triggerFlash } = useFlash();
 
-  const [formData, setFormData] = useState({
-    fullname: '',
-    email: '',
-    password: '',
-    gstin:''
-  });
-  const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  }
+  const [formData, setFormData] = useState(EMPTY);
+  const [submitting, setSubmitting] = useState(false);
 
-    const sellerLogin = () => {
-    navigate('/seller/login')
-  }
-    const userRegistration = () => {
-    navigate('/user/register')
-  }
-  const submit = async (e) => {
-    e.preventDefault();
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (submitting) return;
 
     const { fullname, email, password, gstin } = formData;
-    if (!fullname || !email || !password || !gstin) {
-      triggerFlash("All fields are required!","error");
+    if (!fullname.trim() || !email.trim() || !password || !gstin.trim()) {
+      triggerFlash('All fields are required.', 'error');
       return;
     }
-
     if (!email.includes('@')) {
-      triggerFlash("Invalid email address","error");
+      triggerFlash('Invalid email address', 'error');
+      return;
+    }
+    if (password.length < 8) {
+      triggerFlash('Password must be at least 8 characters.', 'error');
+      return;
+    }
+    if (gstin.trim().length !== 15) {
+      triggerFlash('GSTIN must be exactly 15 characters (e.g. 27ABCDE1234F1Z5).', 'error');
       return;
     }
 
+    setSubmitting(true);
     try {
-      const res = await api.post('/api/seller/register', formData , { withCredentials: true });
-      if (res.data.success === true) {
-        navigate('/seller/login');
+      const res = await api.post('/api/seller/register', {
+        fullname: fullname.trim(),
+        email: email.trim(),
+        password,
+        gstin: gstin.trim().toUpperCase(),
+      });
+      if (res.data.success) {
+        triggerFlash('Seller account created', 'success');
+        navigate('/seller/login', { replace: true });
       } else {
-        if(!res.data.error)
-        triggerFlash("Email is already used","error");
-        else
-        triggerFlash("Something went wrong","error");
+        triggerFlash(res.data.error || 'Could not create the account.', 'error');
       }
     } catch (err) {
-      triggerFlash("Server error or invalid input.","error");
+      triggerFlash(err.friendlyMessage || 'Server error or invalid input.', 'error');
+    } finally {
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
-    <div className='h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-25 items-center'>
-      <Flashpopup visible={flashPopup.visible} message={flashPopup.message} type={flashPopup.type} />
-      <div className='w-full flex justify-between px-5'>
-        <div className='text-xl rounded-2xl px-2 '>Are u customer?
-            <button className='text-xl rounded-2xl px-2 text-blue-500  hover:cursor-pointer' onClick={userRegistration}>Register Here</button></div>
-        <div className='text-xl rounded-2xl px-2 '>
-            <button className='text-xl rounded-2xl px-2 text-blue-500  hover:cursor-pointer' onClick={sellerLogin}>Login</button></div>
+    <div className="min-h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-10 items-center">
+      <div className="w-full flex justify-between px-5">
+        <div className="text-xl rounded-2xl px-2">
+          Are you a customer?{' '}
+          <Link className="text-xl text-blue-500 hover:underline" to="/user/register">
+            Register here
+          </Link>
+        </div>
+        <div className="text-xl rounded-2xl px-2">
+          <Link className="text-xl text-blue-500 hover:underline" to="/seller/login">
+            Login
+          </Link>
+        </div>
       </div>
 
-      <div className='w-1/2 h-1/2 flex flex-col justify-top gap-2 pt-5 rounded-4xl'>
-        <div className='w-full mx-auto text-2xl font-bold text-black'>
-          Welcome to <span className='text-blue-600 text-4xl'>Scatch</span><br />
-          Create Your Account
+      <div className="w-1/2 flex flex-col gap-6 pt-5 rounded-4xl">
+        <div className="w-full mx-auto text-2xl font-bold text-black">
+          Welcome to <span className="text-blue-600 text-4xl">Scatch</span>
+          <br />
+          Create your seller account
         </div>
 
-        <form className='m-0 p-0 w-3/4 flex flex-col gap-3' onSubmit={submit}>
+        <form className="m-0 p-0 w-3/4 flex flex-col gap-3" onSubmit={submit}>
           <input
             type="text"
             name="fullname"
-            placeholder='Full Name'
-            onChange={handleChange}
+            autoComplete="name"
+            placeholder="Full Name"
             value={formData.fullname}
-            className='bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold'
+            onChange={handleChange}
+            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
           />
           <input
             type="email"
             name="email"
-            placeholder='Email'
-            onChange={handleChange}
+            autoComplete="email"
+            placeholder="Email"
             value={formData.email}
-            className='bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold'
+            onChange={handleChange}
+            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
           />
           <input
             type="password"
             name="password"
-            placeholder='Password'
-            onChange={handleChange}
+            autoComplete="new-password"
+            placeholder="Password (min 8 characters)"
             value={formData.password}
-            className='bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold'
+            onChange={handleChange}
+            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
           />
           <input
             type="text"
             name="gstin"
-            placeholder='Gstin'
-            onChange={handleChange}
+            placeholder="GSTIN (15 characters)"
+            maxLength={15}
             value={formData.gstin}
-            className='bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold'
+            onChange={handleChange}
+            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold uppercase"
           />
-          <input
+          <button
             type="submit"
-            value='Create My Account'
-            className='mx-auto w-fit bg-blue-700 hover:bg-blue-900 px-4 rounded-4xl h-10 text-2xl text-white font-semibold hover:cursor-pointer'
-          />
+            disabled={submitting}
+            className="mx-auto w-fit bg-blue-700 hover:bg-blue-900 disabled:bg-blue-400 px-4 rounded-4xl h-10 text-xl text-white font-semibold hover:cursor-pointer"
+          >
+            {submitting ? 'Creating account…' : 'Create My Account'}
+          </button>
         </form>
       </div>
     </div>

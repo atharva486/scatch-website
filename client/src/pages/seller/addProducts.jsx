@@ -1,160 +1,173 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../axios/api';
 import Bar from '../../components/seller/sidemenuSeller';
 import Navbar from '../../components/seller/navbar';
-import Flashpopup from '../../components/flashpopup';
+import { useFlash } from '../../context/FlashContext';
+import useLogout from '../../utils/useLogout';
+
+const EMPTY = { productname: '', price: '', description: '', stock: '', image: null };
 
 function AddProduct() {
-    const navigate = useNavigate();
-    const fileRef = useRef(null);
-    const [sideBar, setSideBar] = useState(false);
-    const [flashPopup, setFlashPopup] = useState({ visible: false, message: "", type: "" });
-    const triggerFlash = (message, type) => {
-        setFlashPopup({ visible: true, message, type });
-        setTimeout(() => setFlashPopup({ ...flashPopup, visible: false }), 1000);
-    };
-    const [formData, setFormData] = useState({ productname: '', price: '', description: '', stock: '', image: null })
-    const change = () => setSideBar(prev => !prev);
-    const logout = async () => {
-        try {
-            let res = await api.post('/api/user/logout', {}, { withCredentials: true })
-            if (res.data.success)
-                navigate('/user/login');
-            else
-                triggerFlash("Not Able to Logout", "error");
+  const navigate = useNavigate();
+  const logout = useLogout('/seller/login');
+  const { triggerFlash } = useFlash();
 
-        }
-        catch {
-            triggerFlash("Not Able to Logout", "error");
-        }
+  const fileRef = useRef(null);
+  const [sideBar, setSideBar] = useState(false);
+  const [formData, setFormData] = useState(EMPTY);
+  const [submitting, setSubmitting] = useState(false);
 
-
+  const handleChange = (event) => {
+    const { name, type, files, value } = event.target;
+    if (type === 'file') {
+      setFormData((prev) => ({ ...prev, image: files?.[0] ?? null }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
-    const add = (e) => {
-        if (e.target.type === 'file')
-            setFormData(prev => ({ ...prev, image: e.target.files[0] }))
-        else
-            setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  };
+
+  const submit = async (event) => {
+    // Previously this was both `onSubmit` and `onClick` on the submit button, so
+    // one click uploaded the image twice.
+    event.preventDefault();
+    if (submitting) return;
+
+    if (!formData.productname.trim() || !formData.description.trim()) {
+      triggerFlash('Enter a product name and description.', 'error');
+      return;
     }
-    const submit = async (e) => {
-        e.preventDefault();
-        const data = new FormData();
-        data.append('productname', formData.productname);
-        data.append('price', formData.price);
-        data.append('description', formData.description);
-        data.append('image', formData.image);
-        data.append('stock', formData.stock);
-        let res = await api.post('/api/seller/create', data, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } });
-        if (res.data.success == true) {
-            triggerFlash("Product Added Succesfully!!!","success");
-        }
-        else {
-            if(res.data.message == true)
-                triggerFlash("Enter All the Details to Add the Product","error");
-            else
-            triggerFlash("Something Went Wrong. Please Add again!!","error");
-
-        }
-        if (fileRef.current) {
-            fileRef.current.value = null;
-        }
-        setFormData({ productname: '', price: '', description: '',stock:'', image: null });
-
+    if (!formData.image) {
+      triggerFlash('Please choose a product image.', 'error');
+      return;
     }
-return (
-  <div className="w-full min-h-screen flex bg-gradient-to-br from-[#fef6f6] to-[#f2f6fb] font-sans">
-    <Flashpopup visible={flashPopup.visible} message={flashPopup.message} type={flashPopup.type} />
-    <div className="flex flex-col flex-1 min-h-screen">
-      <Navbar change={change} logout={logout} f={0} />
-      <div className="flex flex-row flex-1 min-h-screen">
-        <Bar sidebar={sideBar} />
+    if (formData.price === '' || Number(formData.price) < 0) {
+      triggerFlash('Enter a price of zero or more.', 'error');
+      return;
+    }
+    if (formData.stock === '' || !Number.isInteger(Number(formData.stock)) || Number(formData.stock) < 0) {
+      triggerFlash('Enter a stock count of zero or a positive whole number.', 'error');
+      return;
+    }
 
-        <div className="mx-8 my-10 bg-gradient-to-b from-sky-300 to-sky-700 w-full rounded-2xl shadow-lg p-10">
-          <p className="text-3xl font-bold text-[#2C3E50] mb-8 border-b pb-3 border-gray-300">
-            📦 List a New Product
-          </p>
+    const payload = new FormData();
+    payload.append('productname', formData.productname.trim());
+    payload.append('price', formData.price);
+    payload.append('description', formData.description.trim());
+    payload.append('stock', formData.stock);
+    payload.append('image', formData.image);
 
-          <form onSubmit={submit} className="flex flex-col gap-6">
-            <div className="flex flex-col">
-              <label className="text-lg text-gray-700 mb-1">Product Name</label>
-              <input
-                type="text"
-                name="productname"
-                value={formData.productname}
-                placeholder="e.g. Vintage Exhaust System"
-                onChange={add}
-                className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
-              />
-            </div>
+    setSubmitting(true);
+    try {
+      const res = await api.post('/api/seller/create', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (res.data.success) {
+        triggerFlash('Product added successfully', 'success');
+        setFormData(EMPTY);
+        if (fileRef.current) fileRef.current.value = null;
+        navigate('/seller/dashboard');
+      } else {
+        triggerFlash(res.data.error || 'Could not add the product.', 'error');
+      }
+    } catch (err) {
+      triggerFlash(err.friendlyMessage || 'Could not add the product.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-            <div className="flex flex-col">
-              <label className="text-lg text-gray-700 mb-1">Price (in Rupees)</label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                placeholder="e.g. 4999"
-                onChange={add}
-                min="1"
-                className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
-              />
-            </div>
+  return (
+    <div className="w-full min-h-screen flex bg-gradient-to-br from-[#fef6f6] to-[#f2f6fb] font-sans">
+      <div className="flex flex-col flex-1 min-h-screen">
+        <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
-            <div className="flex flex-col">
-              <label className="text-lg text-gray-700 mb-1">Description</label>
-              <textarea
-                placeholder="Detailed product description..."
-                value={formData.description}
-                name="description"
-                rows={4}
-                onChange={add}
-                className="border border-gray-300 rounded-xl px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
-              />
-            </div>
+        <div className="flex flex-row flex-1 min-h-screen">
+          <Bar sidebar={sideBar} />
 
-            <div className="flex flex-col">
-              <label className="text-lg text-gray-700 mb-1">Stock</label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                placeholder="e.g. 1"
-                min="1"
-                onChange={add}
-                className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
-              />
-            </div>
+          <div className="mx-8 my-10 bg-gradient-to-b from-sky-300 to-sky-700 w-full rounded-2xl shadow-lg p-10">
+            <p className="text-3xl font-bold text-[#2C3E50] mb-8 border-b pb-3 border-gray-300">
+              List a New Product
+            </p>
 
-            <div className="flex flex-col">
-              <label className="text-lg text-gray-700 mb-1">Upload Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileRef}
-                name="image"
-                onChange={add}
-                className="border border-dashed border-blue-300 px-4 py-3 rounded-xl bg-[#f0f6ff] hover:bg-[#e4efff] transition-all duration-200"
-                required
-              />
-            </div>
+            <form onSubmit={submit} className="flex flex-col gap-6">
+              <div className="flex flex-col">
+                <label className="text-lg text-gray-700 mb-1">Product Name</label>
+                <input
+                  type="text"
+                  name="productname"
+                  value={formData.productname}
+                  placeholder="e.g. Vintage Exhaust System"
+                  onChange={handleChange}
+                  className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                />
+              </div>
 
-            <div className="pt-4">
-              <button
-                type="submit"
-                onClick={submit}
-                className="bg-green-400 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-green-800 transition-all duration-200 "
-              >
-                Create Product
-              </button>
-            </div>
-          </form>
+              <div className="flex flex-col">
+                <label className="text-lg text-gray-700 mb-1">Price (in Rupees)</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  placeholder="e.g. 4999"
+                  onChange={handleChange}
+                  min="0"
+                  className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-lg text-gray-700 mb-1">Description</label>
+                <textarea
+                  placeholder="Detailed product description…"
+                  value={formData.description}
+                  name="description"
+                  rows={4}
+                  onChange={handleChange}
+                  className="border border-gray-300 rounded-xl px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-lg text-gray-700 mb-1">Stock</label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  placeholder="e.g. 10"
+                  onChange={handleChange}
+                  min="0"
+                  className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="text-lg text-gray-700 mb-1">Upload Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileRef}
+                  name="image"
+                  onChange={handleChange}
+                  className="border border-dashed border-blue-300 px-4 py-3 rounded-xl bg-[#f0f6ff] hover:bg-[#e4efff] transition-all duration-200"
+                />
+              </div>
+
+              <div className="pt-4">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="bg-green-500 text-white disabled:bg-green-300 px-8 py-3 rounded-full text-lg font-semibold hover:bg-green-800 transition-all duration-200"
+                >
+                  {submitting ? 'Creating product…' : 'Create Product'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
-
+  );
 }
 
 export default AddProduct;

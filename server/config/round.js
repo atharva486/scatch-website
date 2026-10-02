@@ -1,3 +1,0 @@
-{
-    ROUNDS :process.env.ROUNDS
-}
