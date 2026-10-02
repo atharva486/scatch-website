@@ -17,11 +17,11 @@
 - Flash messages for real-time feedback
 - Secure seller login and authentication using JWT
 
-### 👥 User Features (Planned / Partially Implemented)
-- Browse products
-- Place orders
-- View order history
-- Add to wishlist/cart
+### 👥 User Features
+- Browse products and view product details
+- Place orders (server-validated price, atomic stock decrement)
+- View order history and per-order details
+- Wishlist with add/remove
 - Make secure payments *(Razorpay integration coming)*
 
 ---
@@ -51,50 +51,92 @@ The seller dashboard offers clean, interactive graphs built with **Recharts**, f
 ## 📁 Folder Structure (Simplified)
 
 ```
-scatch/
-├── client/        # React frontend
-├── server/        # Node + Express backend
-├── README.md
+scatch-website/
+├── client/           # React + Vite frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── pages/
+│   │   └── utils/
+│   └── vercel.json   # SPA rewrite for client-side routing
+├── server/           # Express + Mongoose backend
+│   ├── config/
+│   ├── controllers/
+│   ├── middlewares/
+│   ├── models/
+│   ├── routes/
+│   ├── scripts/      # seed + smoke suite
+│   └── tests/
+├── DEPLOYMENT.md     # live status + deployment guide
+└── README.md
 ```
 
 ---
 
 ## 🚀 Getting Started
 
+The project runs with **zero external services** — no MongoDB Atlas account, no
+Cloudinary setup. When `MONGODB_URI` is empty the server starts an in-memory
+MongoDB and seeds demo data automatically.
+
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/atharva486/scatch-website.git
+cd scatch-website
 ```
 
 ### 2. Set up the Server
 ```bash
-cd Scatch/server
+cd server
 npm install
-npm start
+cp .env.example .env     # optional: MONGODB_URI may stay empty for local dev
+npm run dev              # http://localhost:3000
 ```
+
+The server prints the demo credentials on startup. All demo accounts use the
+password `Password123`:
+
+| Role    | Email                          |
+|---------|--------------------------------|
+| Customer| `user@scatch.dev`              |
+| Customer| `user2@scatch.dev`             |
+| Seller  | `seller@scatch.dev`            |
+| Seller  | `seller2@scatch.dev`           |
+
+> Sellers and customers are separate account types. A seller account cannot log
+> in at `/user/login` and vice versa. Use `/seller/login` for sellers.
 
 ### 3. Set up the Client
 ```bash
 cd ../client
 npm install
-npm start
+npm run dev              # http://localhost:5173
 ```
 
-### 4. Visit in Browser
-```
-http://localhost:3000
+Open **http://localhost:5173** — not 3000, which is the API. In development
+`VITE_API_URL` is left empty so the Vite dev server proxies `/api` to the
+backend and the browser only ever talks to one origin, which keeps the auth
+cookie first-party.
+
+### 4. Verify the stack
+```bash
+cd server
+npm test                # 32 tests: authorization, atomic stock, validation
+./scripts/smoke.sh      # 47 end-to-end checks against the running server
+cd ../client
+npx eslint .            # lint
+npx vite build          # production build
 ```
 
 ---
 
-## 📂 How to Open the Project
+## 🚢 Deployment
 
-After cloning the project, open it in your preferred code editor (e.g., VS Code):
+**See [DEPLOYMENT.md](./DEPLOYMENT.md)** for the current live status, what is
+blocking a working deployment, and the step-by-step fix.
 
-```bash
-code Scatch
-```
-
-Make sure MongoDB is running locally or configured in `.env`. Then run both server and client using instructions above.
+In short: the frontend is on Vercel, the backend on Render, and the two things
+that need doing are the Vercel SPA rewrite (so deep links work) and a Render
+redeploy (so the backend runs the current code).
 
 ---
