@@ -88,25 +88,27 @@ function ProductCard({
     }
   };
 
+  const getStockColor = () => {
+    if (stock === 0) return 'text-red-600';
+    if (stock < 5) return 'text-amber-600';
+    return 'text-primary-500';
+  };
+
   return (
-    <div className="w-64 rounded-2xl shadow-md bg-blue-100 border border-gray-200 hover:shadow-xl transition duration-300">
+    <div className="bg-white rounded-2xl shadow-sm border border-primary-100 overflow-hidden transition-shadow duration-200 hover:shadow-md">
       <ProductImage
-        className="h-48 w-full object-cover rounded-t-2xl"
+        className="h-48 w-full object-cover bg-primary-100 rounded-t-2xl"
         src={image}
         alt={productname || 'product'}
       />
 
       <div className="p-4 flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-gray-800 truncate" title={productname}>
+        <h2 className="text-lg font-semibold text-primary-900 truncate" title={productname}>
           {productname}
         </h2>
-        <p className="text-green-600 font-medium text-md">₹{price}</p>
-        <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
-        <p
-          className={`text-xs font-semibold ${
-            stock === 0 ? 'text-red-600' : stock < 5 ? 'text-amber-600' : 'text-gray-600'
-          }`}
-        >
+        <p className="text-sage-600 font-medium text-md">₹{price}</p>
+        <p className="text-sm text-primary-500 line-clamp-2">{description}</p>
+        <p className={`text-xs font-semibold ${getStockColor()}`}>
           {stock} unit{stock === 1 ? '' : 's'} in stock
         </p>
 
@@ -114,28 +116,28 @@ function ProductCard({
           <button
             type="button"
             onClick={onView}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-md text-sm"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-primary-300 text-primary-700 hover:bg-primary-50 focus:ring-primary-500 text-sm py-2"
           >
             View Details
           </button>
           <button
             type="button"
             onClick={() => setModal('price')}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-md text-sm"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary-900 text-white hover:bg-primary-800 focus:ring-primary-500 active:scale-[0.98] shadow-sm text-sm py-2"
           >
             Change Price
           </button>
           <button
             type="button"
             onClick={() => setModal('stock')}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-md text-sm"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-sage-600 text-white hover:bg-sage-700 focus:ring-sage-500 active:scale-[0.98] shadow-sm text-sm py-2"
           >
             Add Stock
           </button>
           <button
             type="button"
             onClick={() => setModal('delete')}
-            className="bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded-md text-sm"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 active:scale-[0.98] shadow-sm text-sm py-2"
           >
             Delete
           </button>
@@ -147,7 +149,7 @@ function ProductCard({
           <input
             type="number"
             min="0"
-            className="border px-3 py-2 w-full mb-4 rounded"
+            className="w-full px-4 py-3 rounded-xl border border-primary-200 bg-white text-primary-900 placeholder:text-primary-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent disabled:bg-primary-50 disabled:cursor-not-allowed mb-4"
             placeholder="New price"
             value={newPrice}
             onChange={(event) => setNewPrice(event.target.value)}
@@ -161,7 +163,7 @@ function ProductCard({
           <input
             type="number"
             min="1"
-            className="border px-3 py-2 w-full mb-4 rounded"
+            className="w-full px-4 py-3 rounded-xl border border-primary-200 bg-white text-primary-900 placeholder:text-primary-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent disabled:bg-primary-50 disabled:cursor-not-allowed mb-4"
             placeholder="Units to add"
             value={newStock}
             onChange={(event) => setNewStock(event.target.value)}
@@ -172,8 +174,8 @@ function ProductCard({
 
       {modal === 'delete' && (
         <Modal title="Delete this product?" onCancel={close}>
-          <p className="mb-4 text-sm">
-            “{productname}” will be removed permanently. Products that already have orders
+          <p className="mb-4 text-sm text-primary-600">
+            "{productname}" will be removed permanently. Products that already have orders
             cannot be deleted — set their stock to 0 instead.
           </p>
           <ModalActions
@@ -191,9 +193,9 @@ function ProductCard({
 
 function Modal({ title, children }) {
   return (
-    <div className="fixed inset-0 bg-blue-300 bg-opacity-50 flex justify-center items-center z-50 px-4">
-      <div className="bg-blue-100 p-6 rounded-lg shadow-lg w-full max-w-sm">
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
+    <div className="fixed inset-0 bg-primary-900/50 flex justify-center items-center z-50 px-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm p-6 animate-scale-in">
+        <h3 className="text-lg font-semibold text-primary-900 mb-4">{title}</h3>
         {children}
       </div>
     </div>
@@ -207,7 +209,7 @@ function ModalActions({ onCancel, onConfirm, busy, label, danger = false }) {
         type="button"
         onClick={onCancel}
         disabled={busy}
-        className="px-4 py-2 bg-gray-300 rounded disabled:opacity-60"
+        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent text-primary-700 hover:bg-primary-100 focus:ring-primary-500"
       >
         Cancel
       </button>
@@ -215,8 +217,10 @@ function ModalActions({ onCancel, onConfirm, busy, label, danger = false }) {
         type="button"
         onClick={onConfirm}
         disabled={busy}
-        className={`px-4 py-2 text-white rounded disabled:opacity-60 ${
-          danger ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+        className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+          danger
+            ? 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 active:scale-[0.98] shadow-sm'
+            : 'bg-primary-900 text-white hover:bg-primary-800 focus:ring-primary-500 active:scale-[0.98] shadow-sm'
         }`}
       >
         {busy ? 'Working…' : label}

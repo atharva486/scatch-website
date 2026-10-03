@@ -7,10 +7,7 @@ import { AnimatePresence, motion as Motion } from 'framer-motion';
 /**
  * Transient notification.
  *
- * The className used to be a template literal but was assigned with double
- * quotes, so the `${...}` interpolation was emitted as literal text and the
- * toast rendered with the wrong (and unstyled) colour every time. Both success
- * and error now resolve through a real template literal.
+ * Uses the new mature theme colors for success/error toast.
  */
 function Flashpopup({ type, message, visible }) {
   const isSuccess = type === 'success';
@@ -19,17 +16,23 @@ function Flashpopup({ type, message, visible }) {
     <AnimatePresence>
       {visible && (
         <Motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, x: 40, scale: 0.95 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 40, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           role="status"
           aria-live="polite"
-          className={`fixed top-5 right-5 z-50 max-w-sm px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium ${
-            isSuccess ? 'bg-green-600' : 'bg-red-600'
-          }`}
+          className={`fixed top-5 right-5 z-50 max-w-sm px-5 py-4 rounded-xl shadow-lg text-white text-sm font-medium
+            ${isSuccess
+              ? 'bg-sage-600 hover:bg-sage-700'
+              : 'bg-red-600 hover:bg-red-700'}`}
         >
-          {message}
+          <div className="flex items-start gap-3">
+            <span className="flex-shrink-0 mt-0.5" aria-hidden="true">
+              {isSuccess ? '✓' : '✕'}
+            </span>
+            <p className="leading-relaxed">{message}</p>
+          </div>
         </Motion.div>
       )}
     </AnimatePresence>

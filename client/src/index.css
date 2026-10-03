@@ -1,1 +1,125 @@
 @import "tailwindcss";
+
+@theme {
+  /* --- Sophisticated mature/exotic palette --- */
+
+  /* Primary: Deep charcoal slate */
+  --color-primary-50:  #f8fafc;
+  --color-primary-100: #f1f5f9;
+  --color-primary-200: #e2e8f0;
+  --color-primary-300: #cbd5e1;
+  --color-primary-400: #94a3b8;
+  --color-primary-500: #64748b;
+  --color-primary-600: #475569;
+  --color-primary-700: #334155;
+  --color-primary-800: #1e293b;
+  --color-primary-900: #0f172a;
+  --color-primary-950: #020617;
+
+  /* Accent: Warm copper/bronze */
+  --color-accent-50:   #fffbeb;
+  --color-accent-100:  #fef3c7;
+  --color-accent-200:  #fde68a;
+  --color-accent-300:  #fcd34d;
+  --color-accent-400:  #fbbf24;
+  --color-accent-500:  #f59e0b;
+  --color-accent-600:  #d97706;
+  --color-accent-700:  #b45309;
+  --color-accent-800:  #92400e;
+  --color-accent-900:  #78350f;
+  --color-accent-950:  #451a03;
+
+  /* Secondary: Sage / muted green */
+  --color-sage-50:   #f3f7f0;
+  --color-sage-100:  #e3ebe3;
+  --color-sage-200:  #c9d8c9;
+  --color-sage-300:  #a3c0a3;
+  --color-sage-400:  #7fa17f;
+  --color-sage-500:  #648a64;
+  --color-sage-600:  #4f734f;
+  --color-sage-700:  #3f5c3f;
+  --color-sage-800:  #344a34;
+  --color-sage-900:  #2c3e2c;
+  --color-sage-950:  #151f15;
+
+  /* Surface: Warm cream for content areas */
+  --color-surface-50:  #fdfcf7;
+  --color-surface-100: #faf8f0;
+  --color-surface-200: #f3efe3;
+  --color-surface-300: #e8e3d1;
+  --color-surface-400: #dcd5c0;
+  --color-surface-500: #cec4a8;
+}
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    @apply bg-surface-50 text-primary-900 antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-accent-500 ring-offset-2 ring-offset-white;
+  }
+
+  ::selection {
+    @apply bg-accent-200 text-primary-900;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Stagger delays */
+  .delay-1 { animation-delay: 0.05s; }
+  .delay-2 { animation-delay: 0.1s; }
+  .delay-3 { animation-delay: 0.15s; }
+  .delay-4 { animation-delay: 0.2s; }
+  .delay-5 { animation-delay: 0.25s; }
+
+  /* Text balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Hide scrollbar but keep scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -3,40 +3,45 @@
  *
  * `f === 1` renders the search box; `f === 0` hides it.
  *
- * The toggle was an icon-only button with no `type`, no `aria-expanded` and no
- * `aria-controls`, so screen readers announced it as an unlabelled button and
- * gave no indication of whether the menu was open. `aria-expanded` now reflects
- * the sidebar state passed in by the page.
+ * Uses the new mature theme: deep slate background with warm accent highlights.
+ * The toggle button reports its state via `aria-expanded`.
  */
 function Navbar({ change, logout, f, name_search, sidebar, title = 'Scatch' }) {
   return (
-    <header className="w-full h-20 bg-gradient-to-r from-blue-500 to-blue-700 flex items-center justify-between px-6 shadow-md">
+    <header className="w-full h-20 bg-primary-900 flex items-center justify-between px-6 shadow-lg border-b border-primary-800">
       <button
         type="button"
         onClick={change}
         aria-label="Toggle navigation menu"
         aria-expanded={Boolean(sidebar)}
-        className="text-white text-base font-medium hover:text-green-300 transition"
+        className="text-surface-100 text-base font-medium hover:text-accent-300 transition-colors duration-200"
       >
-        ☰ Side Bar
+        ☰ Menu
       </button>
 
-      <div className="text-white text-3xl font-bold tracking-wide">{title}</div>
+      <div className="text-white text-2xl font-bold tracking-wide flex items-center gap-2">
+        <span className="text-accent-400">●</span>
+        {title}
+      </div>
 
       {f === 1 && (
         <input
           type="text"
           aria-label="Search products"
-          placeholder="🔍 Search"
+          placeholder="Search products…"
           onChange={(event) => name_search(event)}
-          className="bg-gray-200 text-gray-800 placeholder-gray-600 rounded-full px-5 py-2 w-80 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-72 md:w-80 px-4 py-2.5 rounded-xl bg-primary-800 border border-primary-700
+                       text-white placeholder-primary-400
+                       focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent
+                       transition-all duration-200"
         />
       )}
 
       <button
         type="button"
         onClick={logout}
-        className="text-white text-base font-medium hover:text-red-300 transition"
+        className="text-surface-100 text-base font-medium hover:text-accent-300 transition-colors duration-200
+                     px-3 py-1.5 rounded-lg hover:bg-primary-800"
       >
         Logout
       </button>
