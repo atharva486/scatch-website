@@ -103,17 +103,53 @@ async function seed({ reset = true } = {}) {
   const now = Date.now();
   let orderCount = 0;
 
+  /**
+   * Places `count` orders inside one calendar month: ascending, distinct, and
+   * never in the future.
+   *
+   * The original code called `setDate(2 + n * 7)` on "now". That overshot into
+   * the future on most days -- run on the 4th, setDate(16) was twelve days
+   * ahead -- and a future-dated order sorted above the buyer's real newest one
+   * in the history list, so checkout prefilled from the wrong record. It also
+   * gave every order the seed run's time of day, leaving their relative order
+   * arbitrary.
+   *
+   * Spreading across the window the month actually leaves available fixes both,
+   * and keeps each month's orders inside that month so the charts bucket them
+   * under the right label.
+   */
+  function monthSlots(monthAgo, count) {
+    // `setMonth(m, 1)` sets month and day together, so it cannot overflow the
+    // way `setMonth(m)` followed by `setDate(1)` would from a 29th-31st.
+    const start = new Date(now);
+    start.setMonth(start.getMonth() - monthAgo, 1);
+    start.setHours(0, 0, 0, 0);
+
+    const nextMonth = new Date(start);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+    // The current month's window closes at "now". An earlier month's closes at
+    // its end, which is in the past by definition.
+    const span = Math.min(nextMonth.getTime(), now) - start.getTime();
+
+    // Degenerate only at the exact millisecond a month begins. Step back a
+    // second at a time so the orders stay distinct, ordered, and in the past.
+    if (span < count) return Array.from({ length: count }, (_, n) => new Date(now - (count - n) * 1000));
+
+    return Array.from(
+      { length: count },
+      (_, n) => new Date(start.getTime() + Math.round(((n + 1) * span) / (count + 1)))
+    );
+  }
+
   for (let monthAgo = 5; monthAgo >= 0; monthAgo -= 1) {
     const ordersThisMonth = 3 + ((monthAgo * 2) % 4);
+    const slots = monthSlots(monthAgo, ordersThisMonth);
 
     for (let n = 0; n < ordersThisMonth; n += 1) {
       const product = products[(monthAgo + n) % products.length];
       const buyer = users[(monthAgo + n) % users.length];
       const quantity = 1 + ((monthAgo + n) % 3);
-
-      const orderedAt = new Date(now);
-      orderedAt.setMonth(orderedAt.getMonth() - monthAgo);
-      orderedAt.setDate(2 + n * 7);
 
       await orderModel.create({
         product: product._id,
@@ -122,7 +158,7 @@ async function seed({ reset = true } = {}) {
         quantity,
         buyPrice: product.price,
         address: ADDRESSES[(monthAgo + n) % ADDRESSES.length],
-        orderedAt,
+        orderedAt: slots[n],
       });
 
       orderCount += 1;

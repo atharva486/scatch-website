@@ -3,6 +3,7 @@ const productModel = require('../models/productmodel');
 const orderModel = require('../models/ordermodel');
 const userModel = require('../models/usermodel');
 const { asyncHandler, badRequest, forbidden, notFound } = require('../middlewares/errorHandler');
+const { cleanShipping, hasShipping } = require('../utils/address');
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -75,13 +76,19 @@ const product_details = asyncHandler(async (req, res) => {
 const buy = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const quantity = Number(req.body?.quantity);
-  const address = String(req.body?.address ?? '').trim();
+  const structured = hasShipping(req.body?.shipping);
+  const shipping = cleanShipping(req.body?.shipping);
+  // Older clients sent one free-text line instead of the structured address.
+  const legacyAddress = String(req.body?.address ?? '').trim();
 
   if (!isValidObjectId(id)) throw notFound('Product not found');
   if (!Number.isInteger(quantity) || quantity < 1) {
     throw badRequest('Quantity must be a whole number of at least 1');
   }
-  if (!address) throw badRequest('Shipping address is required');
+  // A structured address is validated field-by-field by the order schema, so
+  // it deliberately falls through here even when empty -- that produces the
+  // specific "City is required" messages instead of one vague complaint.
+  if (!structured && !legacyAddress) throw badRequest('Shipping address is required');
 
   const reserved = await productModel.findOneAndUpdate(
     { _id: id, stock: { $gte: quantity } },
@@ -105,7 +112,7 @@ const buy = asyncHandler(async (req, res) => {
       quantity,
       // Snapshot from the database, never from the request body.
       buyPrice: reserved.price,
-      address,
+      ...(structured ? { shipping } : { address: legacyAddress }),
     });
   } catch (err) {
     // Put the stock back if the order could not be recorded, otherwise the
@@ -233,6 +240,9 @@ const order_details = asyncHandler(async (req, res) => {
       image: order.product?.image ?? '',
       quantity: order.quantity,
       address: order.address,
+      // Undefined on orders placed before the address was structured, which is
+      // why the client falls back to the one-line `address`.
+      shipping: order.shipping,
       orderedAt: order.orderedAt,
     },
   });

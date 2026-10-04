@@ -132,7 +132,35 @@ function Order_details() {
 
                     <div className="sm:col-span-2">
                       <dt className="field-label">Shipping address</dt>
-                      <dd className="text-sm leading-relaxed text-primary-600">{order.address}</dd>
+                      {/* Orders placed before the address was structured carry
+                          only the one-line `address` string, so fall back to
+                          it rather than rendering an empty block. */}
+                      {order.shipping ? (
+                        <address className="mt-1 space-y-0.5 text-sm not-italic leading-relaxed text-primary-600">
+                          <span className="block font-semibold text-primary-800">
+                            {order.shipping.recipient}
+                          </span>
+                          <span className="block">{order.shipping.line1}</span>
+                          {order.shipping.line2 && (
+                            <span className="block">{order.shipping.line2}</span>
+                          )}
+                          <span className="block">
+                            {[order.shipping.city, order.shipping.state, order.shipping.postalCode]
+                              .filter(Boolean)
+                              .join(' ')}
+                          </span>
+                          <span className="block">{order.shipping.country}</span>
+                          {order.shipping.phone && (
+                            <span className="block pt-1 text-primary-500">
+                              {order.shipping.phone}
+                            </span>
+                          )}
+                        </address>
+                      ) : (
+                        <dd className="text-sm leading-relaxed text-primary-600">
+                          {order.address || 'No address was recorded.'}
+                        </dd>
+                      )}
                     </div>
 
                     <div>

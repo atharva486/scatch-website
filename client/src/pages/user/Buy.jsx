@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../axios/api';
 import Bar from '../../components/user/sidemenu';
 import Navbar from '../../components/user/navbar';
+import AddressFields from '../../components/user/AddressFields';
 import { useFlash } from '../../context/FlashContext';
 import useFetch from '../../utils/useFetch';
 import useLogout from '../../utils/useLogout';
 import ProductImage from '../../components/ProductImage';
+import {
+  ADDRESS_FIELDS,
+  EMPTY_ADDRESS,
+  normaliseAddress,
+  validateAddress,
+  validateAddressField,
+} from '../../utils/address';
 
 /**
  * Checkout page.
@@ -15,10 +23,25 @@ import ProductImage from '../../components/ProductImage';
  * a non-existent `quantity_used` field to work out remaining stock. The backend
  * now takes the price from its own database and returns the authoritative
  * `stock`, so this page reads that directly.
+ *
+ * The shipping address used to be one free-text textarea that could only be
+ * checked for emptiness and could not be autofilled. It is now a structured
+ * form (see `components/user/AddressFields.jsx`) that the server validates
+ * field by field.
  */
 function Buy() {
   const { id } = useParams();
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState(EMPTY_ADDRESS);
+  const [addressErrors, setAddressErrors] = useState({});
+  // Errors appear once a field has been left, or once submit has been pressed.
+  // Validating from the first keystroke would scold someone mid-typing.
+  const [addressTouched, setAddressTouched] = useState({});
+  // Set once the buyer edits any field, so the prefill below stops overwriting
+  // their input. This has to be an explicit flag rather than "is the form
+  // non-empty?", because the prefill itself makes it non-empty -- the first
+  // pass would set a default country and then block the profile name forever.
+  const [addressEdited, setAddressEdited] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [quantity, setQuantity] = useState('1');
   const [sideBar, setSideBar] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -30,17 +53,56 @@ function Buy() {
   const { data, loading, error } = useFetch(`/api/product/${id}`);
   const product = data?.product;
 
+  // Prefills. The name and phone come from the profile so they never have to be
+  // typed twice, and the locality comes from the buyer's most recent order so a
+  // returning customer just confirms it.
+  const { data: profileData } = useFetch('/api/user/profile');
+  const { data: ordersData } = useFetch('/api/user/get_products');
+
+  useEffect(() => {
+    if (addressEdited) return;
+
+    const lastShipping = ordersData?.orders?.[0]?.shipping;
+    const user = profileData?.user;
+    // Wait for both sources, otherwise the first pass would fill in defaults
+    // and the second would have nothing left to add.
+    if (!user && !lastShipping) return;
+
+    setAddress(
+      normaliseAddress({
+        ...(lastShipping ?? {}),
+        recipient: user?.fullname || lastShipping?.recipient || '',
+        phone: String(user?.contact ?? '') || lastShipping?.phone || '',
+        country: lastShipping?.country || 'India',
+      })
+    );
+  }, [profileData, ordersData, addressEdited]);
+
   const requested = Number(quantity);
   const quantityValid = Number.isInteger(requested) && requested >= 1;
   const withinStock = product ? requested <= product.stock : false;
 
+  const updateAddress = (name, value) => {
+    setAddressEdited(true);
+    setAddress((previous) => ({ ...previous, [name]: value }));
+    // Clear the complaint as soon as the field is edited again.
+    if (addressErrors[name]) setAddressErrors((previous) => ({ ...previous, [name]: '' }));
+  };
+
+  const blurAddress = (name) => {
+    setAddressTouched((previous) => ({ ...previous, [name]: true }));
+    const field = ADDRESS_FIELDS.find((candidate) => candidate.name === name);
+    setAddressErrors((previous) => ({
+      ...previous,
+      [name]: field ? validateAddressField(field, address[name]) : '',
+    }));
+  };
+
   const buy = async () => {
+    setSubmitAttempted(true);
+
     if (!quantityValid) {
       triggerFlash('Enter a whole number of at least 1 for the quantity.', 'error');
-      return;
-    }
-    if (!address.trim()) {
-      triggerFlash('Enter a shipping address to place the order.', 'error');
       return;
     }
     if (!withinStock) {
@@ -48,11 +110,23 @@ function Buy() {
       return;
     }
 
+    // Validate the whole address on submit so the buyer sees every problem at
+    // once, rather than fixing one field per round trip.
+    const errors = validateAddress(address);
+    setAddressErrors(errors);
+    const invalidFields = Object.keys(errors);
+    if (invalidFields.length) {
+      triggerFlash('Check the highlighted delivery address fields.', 'error');
+      // Move the buyer to the first problem, as a real checkout form does.
+      document.getElementById(`ship-${invalidFields[0]}`)?.focus();
+      return;
+    }
+
     setSubmitting(true);
     try {
       await api.post(`/api/product/buy/${id}`, {
         quantity: requested,
-        address: address.trim(),
+        shipping: normaliseAddress(address),
       });
       triggerFlash('Order placed successfully', 'success');
       navigate('/user/orders', { replace: true });
@@ -62,6 +136,11 @@ function Buy() {
       setSubmitting(false);
     }
   };
+
+  // Only surface an error for a field the buyer has actually engaged with.
+  const visibleAddressErrors = Object.fromEntries(
+    Object.entries(addressErrors).filter(([name]) => addressTouched[name] || submitAttempted)
+  );
 
   return (
     <div className="page-shell flex">
@@ -123,19 +202,12 @@ function Buy() {
                     </h2>
                   </div>
 
-                  <div>
-                    <label className="field-label" htmlFor="address">
-                      Shipping address
-                    </label>
-                    <textarea
-                      id="address"
-                      value={address}
-                      onChange={(event) => setAddress(event.target.value)}
-                      maxLength={500}
-                      placeholder="Where should we deliver this?"
-                      className="field-input resize-none"
-                    />
-                  </div>
+                  <AddressFields
+                    value={address}
+                    errors={visibleAddressErrors}
+                    onChange={updateAddress}
+                    onBlur={blurAddress}
+                  />
 
                   <div>
                     <label className="field-label" htmlFor="quantity">

@@ -84,6 +84,23 @@ async function makeProduct(seller, overrides = {}) {
   return res.body.product;
 }
 
+/**
+ * A complete, valid delivery address.
+ *
+ * Pass overrides to blank or corrupt one part: `validShipping({ city: '' })`.
+ */
+const validShipping = (overrides = {}) => ({
+  recipient: 'Ada Lovelace',
+  line1: '221B Baker Street',
+  line2: 'Flat 3',
+  city: 'London',
+  state: 'Greater London',
+  postalCode: 'NW1 6XE',
+  country: 'United Kingdom',
+  phone: '+44 20 7946 0958',
+  ...overrides,
+});
+
 // ------------------------------------------------------------------ health
 
 test('GET /api/health reports ok', async () => {
@@ -271,6 +288,187 @@ test('requires a shipping address', async () => {
 
   const res = await customer.post(`/api/product/buy/${product._id}`).send({ quantity: 1, address: '  ' });
   assert.equal(res.status, 400);
+});
+
+// ------------------------------------------------------- shipping address
+
+test('an order stores the address as structured parts, not one blob', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  const buy = await customer
+    .post(`/api/product/buy/${product._id}`)
+    .send({ quantity: 1, shipping: validShipping() });
+  assert.equal(buy.status, 201, buy.text);
+
+  const orders = await customer.get('/api/user/get_products');
+  const { shipping } = orders.body.orders[0];
+
+  assert.equal(shipping.recipient, 'Ada Lovelace');
+  assert.equal(shipping.line1, '221B Baker Street');
+  assert.equal(shipping.line2, 'Flat 3');
+  assert.equal(shipping.city, 'London');
+  assert.equal(shipping.state, 'Greater London');
+  assert.equal(shipping.postalCode, 'NW1 6XE');
+  assert.equal(shipping.country, 'United Kingdom');
+  assert.equal(shipping.phone, '+44 20 7946 0958');
+});
+
+test('the one-line address is derived from the parts and cannot be spoofed', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  await customer
+    .post(`/api/product/buy/${product._id}`)
+    // A client-supplied `address` alongside a structured one must be ignored.
+    .send({ quantity: 1, shipping: validShipping(), address: 'Somewhere else entirely' });
+
+  const orders = await customer.get('/api/user/get_products');
+  const { address } = orders.body.orders[0];
+
+  assert.equal(address, '221B Baker Street, Flat 3, London Greater London NW1 6XE, United Kingdom');
+  assert.doesNotMatch(address, /Somewhere else/);
+});
+
+test('every required address part is validated, and the message names it', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 20 });
+  const customer = await makeCustomer();
+
+  const cases = [
+    ['recipient', 'Recipient name is required'],
+    ['line1', 'Address line 1 is required'],
+    ['city', 'City is required'],
+    ['state', 'State or region is required'],
+    ['postalCode', 'Postal code is required'],
+    ['country', 'Country is required'],
+  ];
+
+  for (const [field, expected] of cases) {
+    const before = (await customer.get(`/api/product/${product._id}`)).body.product.stock;
+
+    const res = await customer
+      .post(`/api/product/buy/${product._id}`)
+      .send({ quantity: 1, shipping: validShipping({ [field]: '   ' }) });
+
+    assert.equal(res.status, 400, `blank ${field} should be rejected`);
+    assert.match(res.body.error, new RegExp(expected));
+
+    // A rejected address must not cost the seller a unit of stock.
+    const after = (await customer.get(`/api/product/${product._id}`)).body.product.stock;
+    assert.equal(after, before, `stock changed despite a rejected ${field}`);
+  }
+});
+
+test('address line 2 and phone stay optional', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  const res = await customer
+    .post(`/api/product/buy/${product._id}`)
+    .send({ quantity: 1, shipping: validShipping({ line2: '', phone: '' }) });
+  assert.equal(res.status, 201, res.text);
+
+  const { shipping } = (await customer.get('/api/user/get_products')).body.orders[0];
+  assert.equal(shipping.line2, '');
+  assert.equal(shipping.phone, '');
+});
+
+test('rejects an address part that is only whitespace or too short', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  const tooShort = await customer
+    .post(`/api/product/buy/${product._id}`)
+    .send({ quantity: 1, shipping: validShipping({ line1: '12' }) });
+  assert.equal(tooShort.status, 400);
+  assert.match(tooShort.body.error, /at least 4 characters/);
+
+  const singleCharCity = await customer
+    .post(`/api/product/buy/${product._id}`)
+    .send({ quantity: 1, shipping: validShipping({ city: 'X' }) });
+  assert.equal(singleCharCity.status, 400);
+});
+
+test('accepts the postal code formats different countries actually use', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 10 });
+  const customer = await makeCustomer();
+
+  // Indian PIN, US ZIP, US ZIP+4, UK postcode, Canadian alphanumeric.
+  for (const postalCode of ['400001', '94107', '94107-1234', 'NW1 6XE', 'K1A 0B1']) {
+    const res = await customer
+      .post(`/api/product/buy/${product._id}`)
+      .send({ quantity: 1, shipping: validShipping({ postalCode }) });
+    assert.equal(res.status, 201, `postal code "${postalCode}" should be accepted: ${res.text}`);
+  }
+});
+
+test('rejects a postal code containing letters that cannot be posted', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  for (const postalCode of ['SW1A 1AAA!', '!!!!', '1']) {
+    const res = await customer
+      .post(`/api/product/buy/${product._id}`)
+      .send({ quantity: 1, shipping: validShipping({ postalCode }) });
+    assert.equal(res.status, 400, `postal code "${postalCode}" should be rejected`);
+  }
+});
+
+test('an address field cannot smuggle extra keys into the order', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  await customer
+    .post(`/api/product/buy/${product._id}`)
+    .send({
+      quantity: 1,
+      shipping: validShipping({ _id: 'injected', __proto__polluted: true, isAdmin: true }),
+    });
+
+  const { shipping } = (await customer.get('/api/user/get_products')).body.orders[0];
+  assert.equal(shipping._id, undefined);
+  assert.equal(shipping.isAdmin, undefined);
+});
+
+test('the order receipt returns the structured address', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  const buy = await customer
+    .post(`/api/product/buy/${product._id}`)
+    .send({ quantity: 1, shipping: validShipping() });
+  assert.equal(buy.status, 201, buy.text);
+
+  const { orders } = (await customer.get('/api/user/get_products')).body;
+
+  const receipt = await customer.post('/api/product/order_details').send({ order_id: orders[0]._id });
+  assert.equal(receipt.status, 200, receipt.text);
+  assert.equal(receipt.body.order.shipping.city, 'London');
+  assert.equal(receipt.body.order.shipping.postalCode, 'NW1 6XE');
+});
+
+test('a legacy one-line address still places an order', async () => {
+  const seller = await makeSeller();
+  const product = await makeProduct(seller, { stock: 5 });
+  const customer = await makeCustomer();
+
+  const res = await customer
+    .post(`/api/product/buy/${product._id}`)
+    .send({ quantity: 1, address: '221B Baker Street' });
+  assert.equal(res.status, 201, res.text);
+
+  const { shipping, address } = (await customer.get('/api/user/get_products')).body.orders[0];
+  assert.equal(shipping, undefined, 'a legacy order has no structured address');
+  assert.equal(address, '221B Baker Street');
 });
 
 test('concurrent orders cannot oversell the last unit', async () => {

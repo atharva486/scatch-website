@@ -125,6 +125,9 @@ echo "Ordering"
 R="$(curl -s --max-time 10 -b "$JAR_DIR/user" "$BASE/api/product/product_details/$PRODUCT_ID")"
 check "product_details route is not shadowed" "$([ "$(echo "$R" | jq_get success)" = "true" ] && echo true)"
 
+# What the checkout form actually sends: a structured address.
+SHIP='{"recipient":"Ada Lovelace","line1":"221B Baker Street","line2":"Flat 3","city":"London","state":"Greater London","postalCode":"NW1 6XE","country":"United Kingdom","phone":"+44 20 7946 0958"}'
+
 R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/buy/$PRODUCT_ID" \
   -H 'Content-Type: application/json' -d '{"quantity":0,"address":"Somewhere"}')"
 check "rejects quantity of 0" "$([ "$(echo "$R" | jq_get success)" = "false" ] && echo true)"
@@ -134,15 +137,31 @@ R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/buy/$PR
 check "rejects blank address" "$([ "$(echo "$R" | jq_get success)" = "false" ] && echo true)"
 
 R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/buy/$PRODUCT_ID" \
-  -H 'Content-Type: application/json' -d '{"quantity":2,"address":"221B Baker Street","price":1}')"
-check "places an order" "$([ "$(echo "$R" | jq_get success)" = "true" ] && echo true)"
+  -H 'Content-Type: application/json' -d '{"quantity":1,"shipping":{}}')"
+check "rejects an empty structured address" "$([ "$(echo "$R" | jq_get success)" = "false" ] && echo true)"
+
+R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/buy/$PRODUCT_ID" \
+  -H 'Content-Type: application/json' -d '{"quantity":1,"shipping":{"recipient":"Ada Lovelace","line1":"221B Baker Street"}}')"
+check "rejects an address missing city/state/postal/country" "$([ "$(echo "$R" | jq_get success)" = "false" ] && echo true)"
+check "the error names the missing part" "$(echo "$R" | jq_get error | grep -q 'City is required' && echo true)"
+
+R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/buy/$PRODUCT_ID" \
+  -H 'Content-Type: application/json' -d '{"quantity":1,"shipping":{"recipient":"Ada Lovelace","line1":"221B Baker Street","city":"London","state":"Greater London","postalCode":"SW1A 1AAA!","country":"United Kingdom"}}')"
+check "rejects an unpostable postal code" "$([ "$(echo "$R" | jq_get success)" = "false" ] && echo true)"
+
+STOCK_BEFORE="$(curl -s --max-time 10 -b "$JAR_DIR/user" "$BASE/api/product/$PRODUCT_ID" | jq_get product.stock)"
+check "rejected addresses did not consume stock (still $STOCK_BEFORE)" "$([ "$STOCK_BEFORE" = "5" ] && echo true)"
+
+R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/buy/$PRODUCT_ID" \
+  -H 'Content-Type: application/json' -d "{\"quantity\":2,\"shipping\":$SHIP,\"price\":1}")"
+check "places an order with a structured address" "$([ "$(echo "$R" | jq_get success)" = "true" ] && echo true)"
 
 R="$(curl -s --max-time 10 -b "$JAR_DIR/user" "$BASE/api/product/$PRODUCT_ID")"
 STOCK_LEFT="$(echo "$R" | jq_get product.stock)"
 check "stock decremented 5 -> $STOCK_LEFT" "$([ "$STOCK_LEFT" = "3" ] && echo true)"
 
 R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/buy/$PRODUCT_ID" \
-  -H 'Content-Type: application/json' -d '{"quantity":99,"address":"221B Baker Street"}')"
+  -H 'Content-Type: application/json' -d "{\"quantity\":99,\"shipping\":$SHIP}")"
 check "blocks overselling" "$([ "$(echo "$R" | jq_get success)" = "false" ] && echo true)"
 
 R="$(curl -s --max-time 10 -b "$JAR_DIR/user" "$BASE/api/user/get_products")"
@@ -150,10 +169,14 @@ ORDER_ID="$(echo "$R" | jq_get orders.0._id)"
 ORDER_PRICE="$(echo "$R" | jq_get orders.0.buyPrice)"
 check "order appears in history" "$([ -n "$ORDER_ID" ] && echo true)"
 check "order price came from the database, not the client (got $ORDER_PRICE)" "$([ "$ORDER_PRICE" = "499" ] && echo true)"
+check "address stored as structured city" "$([ "$(echo "$R" | jq_get orders.0.shipping.city)" = "London" ] && echo true)"
+check "address stored as structured postal code" "$([ "$(echo "$R" | jq_get orders.0.shipping.postalCode)" = "NW1 6XE" ] && echo true)"
+check "one-line address derived from the parts" "$([ "$(echo "$R" | jq_get orders.0.address)" = "221B Baker Street, Flat 3, London Greater London NW1 6XE, United Kingdom" ] && echo true)"
 
 R="$(curl -s --max-time 10 -b "$JAR_DIR/user" -X POST "$BASE/api/product/order_details" \
   -H 'Content-Type: application/json' -d "{\"order_id\":\"$ORDER_ID\"}")"
-check "order details resolve by id" "$([ "$(echo "$R" | jq_get order.address)" = "221B Baker Street" ] && echo true)"
+check "order details resolve by id" "$([ "$(echo "$R" | jq_get order.shipping.line1)" = "221B Baker Street" ] && echo true)"
+check "order details return the recipient" "$([ "$(echo "$R" | jq_get order.shipping.recipient)" = "Ada Lovelace" ] && echo true)"
 
 # -------------------------------------------------------------- wishlist
 echo ""

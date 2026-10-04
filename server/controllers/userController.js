@@ -97,6 +97,8 @@ const get_products = asyncHandler(async (req, res) => {
       quantity: order.quantity,
       buyPrice: order.buyPrice,
       address: order.address,
+      // Lets checkout prefill the address form from the buyer's last order.
+      shipping: order.shipping,
       orderedAt: order.orderedAt,
     })),
   });

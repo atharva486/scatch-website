@@ -92,8 +92,11 @@
            focus:border-accent-500 focus:ring-2 focus:ring-accent-200 focus:outline-none;
   }
 
+  /* primary-500, not -400: -400 is #94a3b8, which measures 2.56:1 on white and
+     fails WCAG AA (4.5:1) for 12px text. Hints are real information, not
+     decoration. */
   .field-hint {
-    @apply mt-1.5 text-xs text-primary-400;
+    @apply mt-1.5 text-xs text-primary-500;
   }
 
   .btn-accent-wide {
