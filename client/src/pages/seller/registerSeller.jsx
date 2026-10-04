@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../axios/api';
+import AuthLayout from '../../components/AuthLayout';
 import { useFlash } from '../../context/FlashContext';
 
 const EMPTY = { fullname: '', email: '', password: '', gstin: '' };
@@ -61,75 +62,95 @@ function RegisterSeller() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-10 items-center">
-      <div className="w-full flex justify-between px-5">
-        <div className="text-xl rounded-2xl px-2">
-          Are you a customer?{' '}
-          <Link className="text-xl text-blue-500 hover:underline" to="/user/register">
-            Register here
+    <AuthLayout
+      tone="sage"
+      eyebrow="Seller portal"
+      title="Create your seller account"
+      subtitle="List parts, track stock and see how your store is performing."
+      footer={
+        <>
+          Already registered?{' '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/seller/login">
+            Sign in instead
           </Link>
-        </div>
-        <div className="text-xl rounded-2xl px-2">
-          <Link className="text-xl text-blue-500 hover:underline" to="/seller/login">
-            Login
+          {' · '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/user/register">
+            Shop as a customer
           </Link>
-        </div>
-      </div>
-
-      <div className="w-1/2 flex flex-col gap-6 pt-5 rounded-4xl">
-        <div className="w-full mx-auto text-2xl font-bold text-black">
-          Welcome to <span className="text-blue-600 text-4xl">Scatch</span>
-          <br />
-          Create your seller account
-        </div>
-
-        <form className="m-0 p-0 w-3/4 flex flex-col gap-3" onSubmit={submit}>
+        </>
+      }
+    >
+      <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
+        <div>
+          <label className="field-label" htmlFor="fullname">
+            Business name
+          </label>
           <input
+            id="fullname"
             type="text"
             name="fullname"
-            autoComplete="name"
-            placeholder="Full Name"
+            autoComplete="organization"
+            placeholder="e.g. Aarav Motors"
             value={formData.fullname}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="email">
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             name="email"
             autoComplete="email"
-            placeholder="Email"
+            placeholder="you@yourstore.com"
             value={formData.email}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="password">
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             name="password"
             autoComplete="new-password"
-            placeholder="Password (min 8 characters)"
+            placeholder="At least 8 characters"
             value={formData.password}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="gstin">
+            GSTIN
+          </label>
           <input
+            id="gstin"
             type="text"
             name="gstin"
-            placeholder="GSTIN (15 characters)"
+            placeholder="27ABCDE1234F1Z5"
             maxLength={15}
             value={formData.gstin}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold uppercase"
+            className="field-input uppercase tracking-wider"
           />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mx-auto w-fit bg-blue-700 hover:bg-blue-900 disabled:bg-blue-400 px-4 rounded-4xl h-10 text-xl text-white font-semibold hover:cursor-pointer"
-          >
-            {submitting ? 'Creating account…' : 'Create My Account'}
-          </button>
-        </form>
-      </div>
-    </div>
+          <p className="field-hint">Exactly 15 characters, as printed on your GST certificate.</p>
+        </div>
+
+        <button type="submit" disabled={submitting} className="btn-accent-wide mt-1">
+          {submitting ? 'Creating account…' : 'Create seller account'}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../axios/api';
+import AuthLayout from '../../components/AuthLayout';
 import { useFlash } from '../../context/FlashContext';
 
 function RegisterUser() {
@@ -54,66 +55,78 @@ function RegisterUser() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-10 items-center">
-      <div className="w-full flex justify-between px-5">
-        <div className="text-xl rounded-2xl px-2">
-          Create a new account?{' '}
-          <Link className="text-xl text-blue-500 hover:underline" to="/seller/register">
+    <AuthLayout
+      eyebrow="Get started"
+      title="Create your account"
+      subtitle="Save your details once and check out in a couple of clicks."
+      footer={
+        <>
+          Already registered?{' '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/user/login">
+            Sign in instead
+          </Link>
+          {' · '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/seller/register">
             Register as a seller
           </Link>
-        </div>
-        <div className="text-xl rounded-2xl px-2">
-          <Link className="text-2xl text-blue-600 hover:underline" to="/user/login">
-            Login
-          </Link>
-        </div>
-      </div>
-
-      <div className="w-1/2 flex flex-col gap-6 pt-5 rounded-4xl">
-        <div className="w-full mx-auto text-2xl font-bold text-black">
-          Welcome to <span className="text-blue-600 text-4xl">Scatch</span>
-          <br />
-          Create your account
-        </div>
-
-        <form className="m-0 p-0 w-3/4 flex flex-col gap-3" onSubmit={submit}>
+        </>
+      }
+    >
+      <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
+        <div>
+          <label className="field-label" htmlFor="fullname">
+            Full name
+          </label>
           <input
+            id="fullname"
             type="text"
             name="fullname"
             autoComplete="name"
-            placeholder="Full Name"
+            placeholder="Your name"
             value={formData.fullname}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="email">
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             name="email"
             autoComplete="email"
-            placeholder="Email"
+            placeholder="you@example.com"
             value={formData.email}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="password">
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             name="password"
             autoComplete="new-password"
-            placeholder="Password (min 8 characters)"
+            placeholder="At least 8 characters"
             value={formData.password}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="mx-auto w-fit bg-blue-700 hover:bg-blue-900 disabled:bg-blue-400 px-4 rounded-4xl h-10 text-xl text-white font-semibold hover:cursor-pointer"
-          >
-            {submitting ? 'Creating account…' : 'Create My Account'}
-          </button>
-        </form>
-      </div>
-    </div>
+          <p className="field-hint">Use 8 characters or more.</p>
+        </div>
+
+        <button type="submit" disabled={submitting} className="btn-accent-wide mt-1">
+          {submitting ? 'Creating account…' : 'Create account'}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }
 

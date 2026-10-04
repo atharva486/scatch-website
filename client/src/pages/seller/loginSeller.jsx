@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../axios/api';
+import AuthLayout from '../../components/AuthLayout';
 import { useFlash } from '../../context/FlashContext';
 
 function LoginSeller() {
@@ -47,56 +48,72 @@ function LoginSeller() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-10 items-center">
-      <div className="w-full flex justify-between px-5">
-        <div className="text-xl rounded-2xl px-2">
-          Are you a customer?{' '}
-          <Link className="text-xl text-blue-500 hover:underline" to="/user/login">
-            Login
+    <AuthLayout
+      tone="sage"
+      eyebrow="Seller portal"
+      title="Sign in to your store"
+      subtitle="Manage your catalogue, stock levels and sales analytics."
+      footer={
+        <>
+          New seller?{' '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/seller/register">
+            Create a seller account
           </Link>
-        </div>
-        <div className="text-xl rounded-2xl px-2">
-          Create a seller account?{' '}
-          <Link className="text-xl text-blue-500 hover:underline" to="/seller/register">
-            Register here
+          {' · '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/user/login">
+            Shop as a customer
           </Link>
-        </div>
-      </div>
-
-      <div className="w-1/2 flex flex-col gap-6 pt-10 rounded-4xl">
-        <div className="w-full mx-auto text-2xl font-bold text-black">
-          Login Your <span className="text-blue-600">Seller</span> Account
-        </div>
-
-        <form className="m-0 p-0 w-3/4 flex flex-col gap-3" onSubmit={submit}>
+        </>
+      }
+    >
+      {/* Was both `onSubmit` and `onClick`, which fired two login requests. */}
+      <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
+        <div>
+          <label className="field-label" htmlFor="email">
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             name="email"
             autoComplete="email"
-            placeholder="Email"
+            placeholder="you@yourstore.com"
             value={formData.email}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="password">
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             name="password"
             autoComplete="current-password"
-            placeholder="Password"
+            placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="bg-blue-700 ml-1 w-fit hover:bg-blue-950 disabled:bg-blue-400 px-4 rounded-4xl h-10 text-xl text-white font-semibold hover:cursor-pointer"
-          >
-            {submitting ? 'Logging in…' : 'Login'}
-          </button>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <button type="submit" disabled={submitting} className="btn-accent-wide mt-1">
+          {submitting ? 'Signing in…' : 'Sign in'}
+        </button>
+
+        {/* Only in dev: the seeded seller accounts do not exist against a real
+            database, so advertising them in production would be misleading. */}
+        {import.meta.env.DEV ? (
+          <p className="field-hint text-center">
+            Demo store <span className="font-semibold text-primary-600">seller@scatch.dev</span> ·{' '}
+            <span className="font-semibold text-primary-600">Password123</span>
+          </p>
+        ) : null}
+      </form>
+    </AuthLayout>
   );
 }
 

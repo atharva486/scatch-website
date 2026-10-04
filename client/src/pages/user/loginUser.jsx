@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../axios/api';
+import AuthLayout from '../../components/AuthLayout';
 import { useFlash } from '../../context/FlashContext';
 
 function LoginUser() {
@@ -46,57 +47,73 @@ function LoginUser() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-sky-100 to-sky-500 py-5 flex flex-col gap-10 items-center">
-      <div className="w-full flex justify-between px-5">
-        <div className="text-xl rounded-2xl px-2">
-          Are you a seller?{' '}
-          <Link className="text-xl text-blue-500 hover:underline" to="/seller/login">
-            Login
+    <AuthLayout
+      eyebrow="Welcome back"
+      title="Sign in to your account"
+      subtitle="Track orders, manage your wishlist and check out faster."
+      footer={
+        <>
+          New to Scatch?{' '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/user/register">
+            Create an account
           </Link>
-        </div>
-        <div className="text-xl rounded-2xl px-2">
-          Create a new account?{' '}
-          <Link className="text-xl text-blue-500 hover:underline" to="/user/register">
-            Register
+          {' · '}
+          <Link className="font-semibold text-primary-900 underline-offset-4 hover:underline" to="/seller/login">
+            Sell on Scatch
           </Link>
-        </div>
-      </div>
-
-      <div className="w-1/2 flex flex-col gap-6 pt-10 rounded-4xl">
-        <div className="w-full mx-auto text-2xl font-bold text-black">Login Your Account</div>
-
-        <form className="m-0 p-0 w-3/4 flex flex-col gap-3" onSubmit={submit}>
+        </>
+      }
+    >
+      {/* `onClick={submit}` used to sit alongside `onSubmit={submit}`, so a
+          click fired two login requests (and the click path skipped
+          preventDefault, reloading the page). Now the form handles it once. */}
+      <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
+        <div>
+          <label className="field-label" htmlFor="email">
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             name="email"
             autoComplete="email"
-            placeholder="Email"
+            placeholder="you@example.com"
             value={formData.email}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="password">
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             name="password"
             autoComplete="current-password"
-            placeholder="Password"
+            placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
-            className="bg-gray-300 rounded-xl px-3 h-10 w-full outline-none font-semibold"
+            className="field-input"
           />
-          {/* `onClick={submit}` used to sit alongside `onSubmit={submit}`, so a
-              click fired two login requests (and the click path skipped
-              preventDefault, reloading the page). Now the form handles it once. */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="ml-1 w-fit bg-blue-700 hover:bg-blue-900 disabled:bg-blue-400 px-4 rounded-4xl h-10 text-xl text-white font-semibold hover:cursor-pointer"
-          >
-            {submitting ? 'Logging in…' : 'Login'}
-          </button>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        <button type="submit" disabled={submitting} className="btn-accent-wide mt-1">
+          {submitting ? 'Signing in…' : 'Sign in'}
+        </button>
+
+        {/* Only in dev: these seeded accounts do not exist against a real
+            database, so advertising them in production would be misleading. */}
+        {import.meta.env.DEV ? (
+          <p className="field-hint text-center">
+            Demo account <span className="font-semibold text-primary-600">user@scatch.dev</span> ·{' '}
+            <span className="font-semibold text-primary-600">Password123</span>
+          </p>
+        ) : null}
+      </form>
+    </AuthLayout>
   );
 }
 

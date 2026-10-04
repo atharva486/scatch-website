@@ -73,6 +73,37 @@
   }
 }
 
+@layer components {
+  /*
+   * Shared form primitives for the four login/register screens.
+   *
+   * These are plain CSS rather than `@apply`-of-a-custom-class because Tailwind
+   * v4 only lets `@apply` reference theme utilities, not other component
+   * classes. Every colour here comes from the `@theme` palette above.
+   */
+  .field-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-primary-500;
+  }
+
+  .field-input {
+    @apply w-full rounded-xl border border-primary-200 bg-white px-3.5 py-2.5 text-sm
+           font-medium text-primary-900 shadow-sm transition
+           placeholder:font-normal placeholder:text-primary-400
+           focus:border-accent-500 focus:ring-2 focus:ring-accent-200 focus:outline-none;
+  }
+
+  .field-hint {
+    @apply mt-1.5 text-xs text-primary-400;
+  }
+
+  .btn-accent-wide {
+    @apply inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-900
+           px-4 py-2.5 text-sm font-semibold text-surface-50 shadow-sm transition
+           hover:bg-primary-800 active:translate-y-px
+           disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary-900;
+  }
+}
+
 @layer utilities {
   /* Animation utilities */
   .animate-fade-in {
