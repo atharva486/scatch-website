@@ -77,71 +77,74 @@ function EditValues({ value: field, originalVal, onClose, getdata, apiBase, allo
   const label = field === 'fullname' ? 'name' : field;
 
   return (
-    <div className="fixed inset-0 bg-blue-300 bg-opacity-40 flex justify-center items-center z-50 px-4">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+    <div
+      // `bg-opacity-*` is a Tailwind v3 utility and generates nothing in v4;
+      // the slash syntax is what actually applies here.
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary-950/50 px-4 backdrop-blur-xs"
+      role="dialog"
+      aria-modal="true"
+      aria-label={isPassword ? 'Change password' : `Update ${label}`}
+    >
+      <div className="w-full max-w-sm rounded-2xl border border-primary-100 bg-white p-6 shadow-xl">
         {isPassword && !unlocked ? (
           <>
-            <h3 className="text-lg font-semibold mb-4">Confirm your current password</h3>
+            <h3 className="text-lg font-semibold text-primary-900">Confirm your current password</h3>
+            <p className="mt-1 text-sm text-primary-500">
+              Enter it once to unlock the password change.
+            </p>
+
+            <label className="field-label mt-5" htmlFor="current-password">
+              Current password
+            </label>
             <input
+              id="current-password"
               ref={passwordRef}
               type="password"
               autoComplete="current-password"
-              className="border px-3 py-2 w-full mb-4 rounded"
-              placeholder="Current password"
+              className="field-input"
+              placeholder="••••••••"
               value={previousPassword}
               onChange={(e) => setPreviousPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && verifyPreviousPassword()}
             />
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-300 rounded"
-              >
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={onClose} className="btn-quiet">
                 Cancel
               </button>
-              <button
-                type="button"
-                onClick={verifyPreviousPassword}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
+              <button type="button" onClick={verifyPreviousPassword} className="btn-primary">
                 Continue
               </button>
             </div>
           </>
         ) : (
           <>
-            <h3 className="text-lg font-semibold mb-4 capitalize">
+            <h3 className="text-lg font-semibold capitalize text-primary-900">
               {isPassword ? `Set a new ${label}` : `Update your ${label}`}
             </h3>
 
+            <label className="field-label mt-5" htmlFor="new-value">
+              {isPassword ? 'New password' : `New ${label}`}
+            </label>
             <input
+              id="new-value"
               // A password field must never be a plain text input.
               type={isPassword ? 'password' : 'text'}
               autoComplete={isPassword ? 'new-password' : 'off'}
-              className="border px-3 py-2 w-full mb-4 rounded"
-              placeholder={isPassword ? 'New password' : `New ${label}`}
+              className="field-input"
+              placeholder={isPassword ? 'At least 8 characters' : `New ${label}`}
               value={newVal}
               onChange={(e) => setNewVal(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && save()}
             />
 
-            {isPassword && <p className="text-xs text-gray-500 mb-3">At least 8 characters.</p>}
+            {isPassword && <p className="field-hint">Use 8 characters or more.</p>}
 
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-300 rounded"
-              >
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={onClose} className="btn-quiet">
                 Cancel
               </button>
-              <button
-                type="button"
-                disabled={saving}
-                onClick={save}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded"
-              >
+              <button type="button" disabled={saving} onClick={save} className="btn-primary">
                 {saving ? 'Saving…' : 'Save'}
               </button>
             </div>

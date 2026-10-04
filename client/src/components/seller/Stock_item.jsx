@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import useFetch from '../../utils/useFetch';
+import { ANIMATE_BARS, AXIS_TICK, CURSOR_FILL, GRID_STROKE, SERIES, TOOLTIP_STYLE } from './chartTheme';
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -7,9 +8,11 @@ const renderStockTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
   return (
-    <div className="bg-white border border-gray-300 p-2 rounded shadow">
-      <p className="font-semibold">{row.productname}</p>
-      <p>Stock: {row.stock}</p>
+    <div style={TOOLTIP_STYLE}>
+      <p className="font-semibold text-primary-900">{row.productname}</p>
+      <p className="text-primary-600">
+        {row.stock === 0 ? 'Out of stock' : `${row.stock} in stock`}
+      </p>
     </div>
   );
 };
@@ -21,7 +24,8 @@ const renderStockTooltip = ({ active, payload }) => {
  * success), and the component previously pushed into a local array *during
  * render*, mutating state between renders. The filter and sort are now derived
  * with `useMemo`, and out-of-stock items get a non-zero display value so their
- * bar is still visible (a real 0-height bar is invisible).
+ * bar is still visible (a real 0-height bar is invisible). The heading moved to
+ * the section wrapper in `business_analysis.jsx`.
  */
 function Stock_item() {
   const { data, loading, error } = useFetch('/api/seller/low_stock');
@@ -37,35 +41,41 @@ function Stock_item() {
     }));
 
   return (
-    <>
-      <h2 className="text-center text-lg font-semibold mb-4">
-        Low Stock Items (Less than {LOW_STOCK_THRESHOLD})
-      </h2>
+    <div className="h-full w-full">
+      {loading && <p className="text-sm text-primary-500">Loading chart…</p>}
+      {!loading && error && <p className="text-sm text-red-700">{error}</p>}
+      {!loading && !error && lowStock.length === 0 && (
+        <p className="text-sm text-primary-500">Nothing is running low.</p>
+      )}
 
-      <div className="w-full h-[320px] p-4 rounded-2xl shadow-md bg-white">
-        {loading && <p className="text-gray-600">Loading chart…</p>}
-        {!loading && error && <p className="text-red-700">{error}</p>}
-        {!loading && !error && lowStock.length === 0 && (
-          <p className="text-gray-600">Nothing is running low.</p>
-        )}
-
-        {lowStock.length > 0 && (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={lowStock}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="productname" interval={0} angle={-20} textAnchor="end" fontSize={11} />
-              <YAxis allowDecimals={false} />
-              <Tooltip content={renderStockTooltip} />
-              <Bar dataKey="displayStock" name="Units in stock">
-                {lowStock.map((item, index) => (
-                  <Cell key={`${item.productname}-${index}`} fill={item.stock === 0 ? '#dc2626' : '#f59e0b'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-    </>
+      {lowStock.length > 0 && (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={lowStock} margin={{ top: 10, right: 16, left: -16, bottom: 56 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+            <XAxis
+              dataKey="productname"
+              interval={0}
+              angle={-35}
+              textAnchor="end"
+              height={60}
+              tick={AXIS_TICK}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis allowDecimals={false} tick={AXIS_TICK} axisLine={false} tickLine={false} />
+            <Tooltip content={renderStockTooltip} cursor={{ fill: CURSOR_FILL }} />
+            <Bar dataKey="displayStock" name="Units in stock" radius={[6, 6, 0, 0]} isAnimationActive={ANIMATE_BARS}>
+              {lowStock.map((item, index) => (
+                <Cell
+                  key={`${item.productname}-${index}`}
+                  fill={item.stock === 0 ? SERIES.danger : SERIES.accent}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
 }
 

@@ -28,7 +28,9 @@ function Flashpopup({ type, message, visible }) {
               : 'bg-red-600 hover:bg-red-700'}`}
         >
           <div className="flex items-start gap-3">
-            <span className="flex-shrink-0 mt-0.5" aria-hidden="true">
+            {/* `flex-shrink-0` is the Tailwind v3 name; in v4 it is `shrink-0`,
+                and the old spelling silently generated no CSS at all. */}
+            <span className="mt-0.5 shrink-0" aria-hidden="true">
               {isSuccess ? '✓' : '✕'}
             </span>
             <p className="leading-relaxed">{message}</p>

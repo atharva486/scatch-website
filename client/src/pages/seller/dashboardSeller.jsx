@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Bar from '../../components/seller/sidemenuSeller';
 import Navbar from '../../components/seller/navbar';
 import ProductCard from '../../components/seller/productSeller';
@@ -24,42 +24,64 @@ function DashboardSeller() {
   ]);
 
   return (
-    <div className="w-full min-h-screen flex bg-gradient-to-br from-[#f7f7fa] to-[#e3e8f0]">
-      <div className="flex flex-col flex-1 min-h-screen">
+    <div className="page-shell flex">
+      <div className="flex min-h-screen flex-1 flex-col">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={1} name_search={onSearch} />
 
-        <div className="flex flex-row flex-1 w-full min-h-screen">
+        <div className="flex w-full min-h-screen flex-1 flex-row">
           <Bar sidebar={sideBar} />
 
-          <div className="mx-10 my-8 w-full h-fit bg-gradient-to-br from-sky-300 to-sky-700 rounded-2xl shadow-lg p-8">
-            <p className="text-3xl font-bold text-[#2C3E50] mb-6 border-b border-gray-300 pb-4">
-              Your Products
-            </p>
+          <div className="mx-6 my-8 w-full md:mx-10">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="section-label">Seller portal</p>
+                <h1 className="page-heading mt-1.5">Your products</h1>
+                <p className="page-sub">Everything you have listed, with live stock levels.</p>
+              </div>
 
-            {loading && <p className="text-lg text-gray-900">Loading your products…</p>}
-            {!loading && error && <p className="text-lg text-red-900">{error}</p>}
-            {!loading && !error && filtered.length === 0 && (
-              <p className="text-lg text-gray-900">
-                {search ? 'No items match that search.' : 'You have not listed any products yet.'}
-              </p>
+              <Link to="/seller/addproduct" className="btn-primary">
+                List a new product
+              </Link>
+            </div>
+
+            {loading && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">Loading your products…</p>
+              </div>
             )}
 
-            <div className="flex flex-wrap gap-6 justify-start">
-              {filtered.map((item) => (
-                <ProductCard
-                  key={item._id}
-                  image={item.image}
-                  productname={item.productname}
-                  price={item.price}
-                  description={item.description}
-                  stock={item.stock}
-                  product_id={item._id}
-                  onChanged={reload}
-                  onView={() => navigate(`/seller/show/${item._id}`)}
-                  onError={(message) => triggerFlash(message, 'error')}
-                />
-              ))}
-            </div>
+            {!loading && error && (
+              <div className="page-panel border-red-200">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            {!loading && !error && filtered.length === 0 && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">
+                  {search ? 'No items match that search.' : 'You have not listed any products yet.'}
+                </p>
+              </div>
+            )}
+
+            {filtered.length > 0 && (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((item) => (
+                  <ProductCard
+                    key={item._id}
+                    image={item.image}
+                    productname={item.productname}
+                    price={item.price}
+                    description={item.description}
+                    stock={item.stock}
+                    product_id={item._id}
+                    onChanged={reload}
+                    onView={() => navigate(`/seller/show/${item._id}`)}
+                    onError={(message) => triggerFlash(message, 'error')}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

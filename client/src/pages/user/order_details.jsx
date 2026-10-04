@@ -56,104 +56,99 @@ function Order_details() {
   }, [orderId]);
 
   return (
-    <div className="w-full min-h-screen flex bg-[#FDEFEF]">
+    <div className="page-shell flex">
       <div className="flex flex-col flex-1">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
-        <div className="flex flex-row flex-1 w-full">
+        <div className="flex w-full flex-1 flex-row">
           <Bar sidebar={sideBar} />
 
-          <div className="mx-8 my-6 w-full bg-gradient-to-r from-sky-400 to-sky-800 text-black rounded-3xl shadow-2xl p-10 border border-[#0F346015]">
-            <p className="text-4xl font-bold text-red-800 mb-8 tracking-wide">Order Details</p>
+          <div className="mx-6 my-8 w-full md:mx-10">
+            <div className="mb-6">
+              <Link
+                to="/user/orders"
+                className="text-sm font-medium text-primary-500 underline-offset-4 hover:text-primary-800 hover:underline"
+              >
+                ← Back to orders
+              </Link>
+              <h1 className="page-heading mt-2">Order details</h1>
+              <p className="page-sub">A record of what you bought, and where it went.</p>
+            </div>
 
-            {loading && <p className="text-lg">Loading order…</p>}
+            {loading && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">Loading order…</p>
+              </div>
+            )}
 
             {!loading && error && (
-              <p className="text-lg text-red-900">
-                {error}. <Link className="underline" to="/user/orders">Back to orders</Link>
-              </p>
+              <div className="page-panel border-red-200">
+                <p className="text-sm text-red-700">
+                  {error}.{' '}
+                  <Link className="font-semibold underline underline-offset-4" to="/user/orders">
+                    Back to orders
+                  </Link>
+                </p>
+              </div>
             )}
 
             {!loading && !error && order && (
-              <div className="flex flex-col gap-5">
-                <div className="flex flex-col items-center">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+                <div className="page-panel flex flex-col items-center">
                   <ProductImage
                     src={order.image}
                     alt={order.productname || 'product'}
-                    className="w-80 h-80 object-contain rounded-xl shadow bg-white/40"
+                    className="h-64 w-full rounded-xl bg-surface-100 object-contain"
                   />
+                  <p className="mt-4 text-center text-sm text-primary-500">Product image</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="flex flex-col">
-                    <label className="text-md text-[#0F3460]">Product Name</label>
-                    <input
-                      type="text"
-                      value={order.productname || ''}
-                      readOnly
-                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
-                    />
-                  </div>
+                {/* These were read-only <input>s, which looked editable but
+                    were not. A definition list states the same facts without
+                    the false affordance. */}
+                <div className="page-panel">
+                  <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <dt className="field-label">Product name</dt>
+                      <dd className="text-base font-semibold text-primary-900">{order.productname}</dd>
+                    </div>
 
-                  <div className="flex flex-col">
-                    <label className="text-md text-[#0F3460]">Price paid per unit (₹)</label>
-                    <input
-                      type="number"
-                      value={order.price ?? ''}
-                      readOnly
-                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
-                    />
-                  </div>
+                    <div>
+                      <dt className="field-label">Price paid per unit</dt>
+                      <dd className="text-base font-medium text-sage-700">₹{order.price}</dd>
+                    </div>
 
-                  <div className="flex flex-col col-span-2">
-                    <label className="text-md text-[#0F3460]">Description</label>
-                    <textarea
-                      value={order.description || ''}
-                      readOnly
-                      rows={3}
-                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 resize-none"
-                    />
-                  </div>
+                    <div>
+                      <dt className="field-label">Quantity bought</dt>
+                      <dd className="text-base font-medium text-primary-900">{order.quantity}</dd>
+                    </div>
 
-                  <div className="flex flex-col col-span-2">
-                    <label className="text-md text-[#0F3460]">Address</label>
-                    <textarea
-                      value={order.address || ''}
-                      readOnly
-                      rows={2}
-                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 resize-none"
-                    />
-                  </div>
+                    <div className="sm:col-span-2">
+                      <dt className="field-label">Description</dt>
+                      <dd className="text-sm leading-relaxed text-primary-600">
+                        {order.description || 'No description provided.'}
+                      </dd>
+                    </div>
 
-                  <div className="flex flex-col">
-                    <label className="text-md text-[#0F3460]">Order Date</label>
-                    <input
-                      type="text"
-                      value={order.orderedAt ? new Date(order.orderedAt).toLocaleString() : ''}
-                      readOnly
-                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
-                    />
-                  </div>
+                    <div className="sm:col-span-2">
+                      <dt className="field-label">Shipping address</dt>
+                      <dd className="text-sm leading-relaxed text-primary-600">{order.address}</dd>
+                    </div>
 
-                  <div className="flex flex-col">
-                    <label className="text-md text-[#0F3460]">Quantity bought</label>
-                    <input
-                      type="number"
-                      value={order.quantity ?? ''}
-                      readOnly
-                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10"
-                    />
-                  </div>
+                    <div>
+                      <dt className="field-label">Order date</dt>
+                      <dd className="text-sm text-primary-700">
+                        {order.orderedAt ? new Date(order.orderedAt).toLocaleString() : '—'}
+                      </dd>
+                    </div>
 
-                  <div className="flex flex-col col-span-2">
-                    <label className="text-md text-[#0F3460]">Order total (₹)</label>
-                    <input
-                      type="number"
-                      value={(order.price ?? 0) * (order.quantity ?? 0)}
-                      readOnly
-                      className="rounded-lg px-4 py-3 bg-white border-2 border-[#0F3460]/10 font-semibold"
-                    />
-                  </div>
+                    <div>
+                      <dt className="field-label">Order total</dt>
+                      <dd className="text-lg font-bold text-primary-900">
+                        ₹{(order.price ?? 0) * (order.quantity ?? 0)}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
               </div>
             )}

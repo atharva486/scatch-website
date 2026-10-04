@@ -1,12 +1,16 @@
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dunxugggm';
 
+// This is a data-URI SVG, so it cannot use Tailwind class names and the fills
+// must be literal. They were Tailwind's old grey ramp (`#e5e7eb`, `#6b7280`),
+// which left a grey box sitting inside otherwise cream/slate product cards.
+// Matched to the `@theme` tokens they replace: primary-200, primary-500.
 const PLACEHOLDER =
   'data:image/svg+xml;charset=UTF-8,' +
   encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
-       <rect width="100%" height="100%" fill="#e5e7eb"/>
+       <rect width="100%" height="100%" fill="#e2e8f0"/>
        <text x="50%" y="50%" text-anchor="middle" font-family="sans-serif"
-             font-size="16" fill="#6b7280">No image</text>
+             font-size="16" fill="#64748b">No image</text>
      </svg>`
   );
 

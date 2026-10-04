@@ -25,72 +25,81 @@ function Orders() {
   ]);
 
   return (
-    <div className="w-full min-h-screen flex flex-row bg-[#FDEFEF]">
-      <div className="flex flex-col flex-1 min-h-screen">
+    <div className="page-shell flex flex-row">
+      <div className="flex min-h-screen flex-1 flex-col">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={1} name_search={onSearch} />
 
-        <div className="flex flex-row flex-1 w-full min-h-screen">
+        <div className="flex w-full min-h-screen flex-1 flex-row">
           <Bar sidebar={sideBar} />
 
-          <div className="mx-10 my-8 w-full h-fit bg-gradient-to-br from-sky-300 to-sky-600 rounded-2xl shadow-xl p-8 border border-[#E2E8F0]">
-            <h3 className="text-4xl font-bold text-red-800 mb-8 tracking-wide">Order History</h3>
+          <div className="mx-6 my-8 w-full md:mx-10">
+            <div className="mb-6">
+              <p className="section-label">Your account</p>
+              <h1 className="page-heading mt-1.5">Order history</h1>
+              <p className="page-sub">Every order you have placed, most recent first.</p>
+            </div>
 
-            {loading && <p className="text-lg text-gray-900">Loading your orders…</p>}
-            {!loading && error && <p className="text-lg text-red-900">{error}</p>}
+            {loading && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">Loading your orders…</p>
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="page-panel border-red-200">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
             {!loading && !error && filtered.length === 0 && (
-              <p className="text-lg text-gray-900">No orders yet.</p>
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">
+                  No orders yet. Parts you buy will show up here.
+                </p>
+              </div>
             )}
 
             {filtered.length > 0 && (
-              <div className="overflow-x-auto rounded-xl">
-                <table className="min-w-full text-sm border border-gray-200 shadow-md">
-                  <thead className="bg-[#F1F5F9] text-gray-700 uppercase text-xs tracking-wider">
+              <div className="table-shell bg-white">
+                <table className="table">
+                  <thead>
                     <tr>
-                      <th className="px-4 py-3 border-r text-center">S.no.</th>
-                      <th className="px-6 py-3 border-r text-center">Product</th>
-                      <th className="px-6 py-3 border-r text-center">Price (₹)</th>
-                      <th className="px-6 py-3 border-r text-center">Quantity</th>
-                      <th className="px-6 py-3 border-r text-center">Total (₹)</th>
-                      <th className="px-6 py-3 text-center">Date</th>
+                      <th className="text-center">#</th>
+                      <th>Product</th>
+                      <th className="text-center">Price</th>
+                      <th className="text-center">Qty</th>
+                      <th className="text-center">Total</th>
+                      <th className="text-center">Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map((order, index) => (
-                      <tr
-                        key={order._id}
-                        className="bg-white even:bg-[#FAFAFA] hover:bg-[#f3f4f6] transition duration-150 border-t"
-                      >
-                        <td className="px-4 py-3 text-center font-medium border-black border-r">
-                          {index + 1}
-                        </td>
-                        <td className="px-6 py-3 text-center border-black border-r">
-                          <div className="flex items-center justify-center gap-3">
+                      <tr key={order._id}>
+                        <td className="text-center font-medium text-primary-400">{index + 1}</td>
+                        <td>
+                          <div className="flex items-center gap-3">
                             <ProductImage
                               src={order.product?.image}
                               alt={order.product?.productname || 'product'}
-                              className="h-10 w-10 rounded object-cover bg-gray-200"
+                              className="h-10 w-10 shrink-0 rounded-lg object-cover bg-surface-200"
                             />
                             <Link
                               // The order id is in the URL, so the page survives a
                               // refresh or a shared link. It used to live in
                               // `location.state`, which is lost on reload.
                               to={`/user/order_details/${order._id}`}
-                              className="text-[#1d4ed8] hover:underline"
+                              className="font-medium text-primary-900 underline-offset-4 hover:text-accent-700 hover:underline"
                             >
                               {order.product?.productname ?? 'Unavailable product'}
                             </Link>
                           </div>
                         </td>
-                        <td className="px-6 py-3 border-black border-r text-center text-[#10B981] font-semibold">
-                          ₹{order.buyPrice}
-                        </td>
-                        <td className="px-6 py-3 border-black border-r text-center">{order.quantity}</td>
-                        <td className="px-6 py-3 border-black border-r text-center font-semibold">
+                        <td className="text-center font-medium text-sage-700">₹{order.buyPrice}</td>
+                        <td className="text-center">{order.quantity}</td>
+                        <td className="text-center font-semibold text-primary-900">
                           ₹{order.buyPrice * order.quantity}
                         </td>
-                        <td className="px-6 py-3 border-black border-r text-center text-gray-600">
-                          {formatDate(order.orderedAt)}
-                        </td>
+                        <td className="text-center text-primary-500">{formatDate(order.orderedAt)}</td>
                       </tr>
                     ))}
                   </tbody>

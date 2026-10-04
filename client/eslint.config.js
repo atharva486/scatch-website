@@ -23,7 +23,13 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Capitalised identifiers are React components (e.g. the `Chart` pulled
+      // out of a config array), so both variables and destructured parameters
+      // need the exemption or every mapped component reports as unused.
+      'no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^[A-Z_]' },
+      ],
     },
   },
 ])

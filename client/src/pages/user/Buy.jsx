@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import api from '../../axios/api';
 import Bar from '../../components/user/sidemenu';
 import Navbar from '../../components/user/navbar';
@@ -64,79 +64,85 @@ function Buy() {
   };
 
   return (
-    <div className="w-full min-h-screen flex bg-[#FDEFEF]">
+    <div className="page-shell flex">
       <div className="flex flex-col flex-1">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
-        <div className="flex flex-row w-full h-full">
+        <div className="flex w-full flex-1 flex-row">
           <Bar sidebar={sideBar} />
 
-          <div className="flex-1 px-10 py-8">
-            <div className="bg-gradient-to-br from-blue-200 to-blue-700 rounded-2xl shadow-2xl p-8">
-              <p className="text-4xl font-bold text-red-800 mb-8 tracking-wide">Product Overview</p>
+          <div className="mx-6 my-8 w-full md:mx-10">
+            <div className="mb-6">
+              <Link
+                to={`/user/product/${id}`}
+                className="text-sm font-medium text-primary-500 underline-offset-4 hover:text-primary-800 hover:underline"
+              >
+                ← Back to product
+              </Link>
+              <h1 className="page-heading mt-2">Checkout</h1>
+              <p className="page-sub">Confirm where this should be delivered.</p>
+            </div>
 
-              {loading && <p className="text-lg text-gray-900">Loading…</p>}
-              {!loading && error && <p className="text-lg text-red-900">{error}</p>}
-              {!loading && !error && !product && (
-                <p className="text-lg text-gray-900">This product is no longer available.</p>
-              )}
+            {loading && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">Loading…</p>
+              </div>
+            )}
 
-              {product && (
-                <form
-                  className="flex flex-col gap-6"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    buy();
-                  }}
-                >
+            {!loading && error && (
+              <div className="page-panel border-red-200">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            {!loading && !error && !product && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">This product is no longer available.</p>
+              </div>
+            )}
+
+            {product && (
+              <form
+                className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  buy();
+                }}
+              >
+                <div className="page-panel flex flex-col gap-6">
+                  <ProductImage
+                    src={product.image}
+                    alt={product.productname || 'product'}
+                    className="h-64 w-full rounded-xl border border-primary-100 bg-surface-100 object-cover"
+                  />
+
                   <div>
-                    <ProductImage
-                      src={product.image}
-                      alt={product.productname || 'product'}
-                      className="w-120 h-80 object-cover rounded-xl shadow-lg border border-[#e9456044]"
-                    />
+                    <p className="section-label">Ordering</p>
+                    <h2 className="mt-1.5 text-xl font-bold tracking-tight text-primary-900">
+                      {product.productname}
+                    </h2>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-lg font-medium text-[#F0F0F0]">Product Name</label>
-                    <input
-                      type="text"
-                      value={product.productname || ''}
-                      readOnly
-                      className="bg-gray-200 text-zinc-900 border border-[#E94560] px-4 py-3 rounded-md"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-lg font-medium text-[#F0F0F0]">Price (₹)</label>
-                    <input
-                      type="number"
-                      value={product.price ?? ''}
-                      readOnly
-                      className="bg-gray-200 text-zinc-900 border border-[#E94560] px-4 py-3 rounded-md"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-lg font-medium text-[#F0F0F0]">
-                      Available: {product.stock} unit{product.stock === 1 ? '' : 's'}
+                  <div>
+                    <label className="field-label" htmlFor="address">
+                      Shipping address
                     </label>
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-lg font-medium text-[#F0F0F0]">Shipping Address</label>
                     <textarea
+                      id="address"
                       value={address}
                       onChange={(event) => setAddress(event.target.value)}
                       maxLength={500}
                       placeholder="Where should we deliver this?"
-                      className="bg-gray-200 text-zinc-900 border border-[#E94560] px-4 py-3 rounded-md resize-none"
+                      className="field-input resize-none"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-lg font-medium text-[#F0F0F0]">Quantity</label>
+                  <div>
+                    <label className="field-label" htmlFor="quantity">
+                      Quantity
+                    </label>
                     <input
+                      id="quantity"
                       type="number"
                       placeholder="1"
                       min="1"
@@ -146,31 +152,62 @@ function Buy() {
                       onKeyDown={(event) => {
                         if (['-', '+', 'e', 'E', '.'].includes(event.key)) event.preventDefault();
                       }}
-                      className="bg-gray-200 text-zinc-900 border border-[#E94560] px-4 py-3 rounded-md"
+                      className="field-input w-32"
                     />
+                    <p className="field-hint">
+                      {product.stock} unit{product.stock === 1 ? '' : 's'} available.
+                    </p>
                     {quantityValid && !withinStock && (
-                      <p className="text-yellow-200 font-semibold">
+                      <p className="mt-1.5 text-xs font-semibold text-red-600">
                         Max available quantity: {product.stock}
                       </p>
                     )}
                   </div>
+                </div>
 
-                  <div>
-                    <button
-                      type="submit"
-                      disabled={submitting || product.stock === 0}
-                      className="bg-[#E94560] hover:bg-[#ff6b81] disabled:bg-gray-500 disabled:cursor-not-allowed px-8 py-3 rounded-full text-lg font-semibold tracking-wide transition-all duration-300"
-                    >
-                      {submitting
-                        ? 'Placing order…'
-                        : product.stock === 0
-                          ? 'Out of Stock'
-                          : `Buy Now · ₹${(product.price ?? 0) * (quantityValid ? requested : 0)}`}
-                    </button>
+                {/* Summary stays visible next to the form so the total never
+                    scrolls out of reach while editing. */}
+                <div className="page-panel h-fit lg:sticky lg:top-8">
+                  <p className="section-label">Order summary</p>
+
+                  <dl className="mt-4 space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <dt className="text-primary-500">Unit price</dt>
+                      <dd className="font-medium text-primary-900">₹{product.price}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-primary-500">Quantity</dt>
+                      <dd className="font-medium text-primary-900">
+                        {quantityValid ? requested : 0}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-primary-500">Delivery</dt>
+                      <dd className="font-medium text-sage-700">Free</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-4 flex items-baseline justify-between border-t border-primary-100 pt-4">
+                    <span className="text-sm font-semibold text-primary-500">Total</span>
+                    <span className="text-2xl font-bold text-primary-900">
+                      ₹{(product.price ?? 0) * (quantityValid ? requested : 0)}
+                    </span>
                   </div>
-                </form>
-              )}
-            </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting || product.stock === 0}
+                    className="btn-primary mt-5 w-full"
+                  >
+                    {submitting
+                      ? 'Placing order…'
+                      : product.stock === 0
+                        ? 'Out of stock'
+                        : 'Place order'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>

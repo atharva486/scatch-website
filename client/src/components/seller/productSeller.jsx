@@ -90,7 +90,7 @@ function ProductCard({
 
   const getStockColor = () => {
     if (stock === 0) return 'text-red-600';
-    if (stock < 5) return 'text-amber-600';
+    if (stock < 5) return 'text-accent-600';
     return 'text-primary-500';
   };
 
@@ -102,54 +102,46 @@ function ProductCard({
         alt={productname || 'product'}
       />
 
-      <div className="p-4 flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-primary-900 truncate" title={productname}>
+      <div className="flex flex-col gap-2 p-4">
+        <h2 className="truncate text-base font-semibold text-primary-900" title={productname}>
           {productname}
         </h2>
-        <p className="text-sage-600 font-medium text-md">₹{price}</p>
-        <p className="text-sm text-primary-500 line-clamp-2">{description}</p>
+        <p className="text-xl font-bold text-primary-900">₹{price}</p>
+        <p className="line-clamp-2 text-sm text-primary-500">{description}</p>
         <p className={`text-xs font-semibold ${getStockColor()}`}>
           {stock} unit{stock === 1 ? '' : 's'} in stock
         </p>
 
-        <div className="flex flex-wrap gap-2 mt-2">
-          <button
-            type="button"
-            onClick={onView}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-primary-300 text-primary-700 hover:bg-primary-50 focus:ring-primary-500 text-sm py-2"
-          >
-            View Details
+        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-primary-100 pt-4">
+          <button type="button" onClick={onView} className="btn-quiet col-span-2">
+            View details
           </button>
-          <button
-            type="button"
-            onClick={() => setModal('price')}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary-900 text-white hover:bg-primary-800 focus:ring-primary-500 active:scale-[0.98] shadow-sm text-sm py-2"
-          >
-            Change Price
+          <button type="button" onClick={() => setModal('price')} className="btn-primary">
+            Change price
           </button>
-          <button
-            type="button"
-            onClick={() => setModal('stock')}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-sage-600 text-white hover:bg-sage-700 focus:ring-sage-500 active:scale-[0.98] shadow-sm text-sm py-2"
-          >
-            Add Stock
+          <button type="button" onClick={() => setModal('stock')} className="btn-sage">
+            Add stock
           </button>
           <button
             type="button"
             onClick={() => setModal('delete')}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 active:scale-[0.98] shadow-sm text-sm py-2"
+            className="col-span-2 text-xs font-semibold text-red-600 underline-offset-4 transition hover:text-red-700 hover:underline"
           >
-            Delete
+            Delete product
           </button>
         </div>
       </div>
 
       {modal === 'price' && (
         <Modal title="Change Price" onCancel={close}>
+          <label className="field-label" htmlFor="new-price">
+            New price
+          </label>
           <input
+            id="new-price"
             type="number"
             min="0"
-            className="w-full px-4 py-3 rounded-xl border border-primary-200 bg-white text-primary-900 placeholder:text-primary-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent disabled:bg-primary-50 disabled:cursor-not-allowed mb-4"
+            className="field-input mb-4"
             placeholder="New price"
             value={newPrice}
             onChange={(event) => setNewPrice(event.target.value)}
@@ -160,10 +152,14 @@ function ProductCard({
 
       {modal === 'stock' && (
         <Modal title="Add Stock" onCancel={close}>
+          <label className="field-label" htmlFor="new-stock">
+            Units to add
+          </label>
           <input
+            id="new-stock"
             type="number"
             min="1"
-            className="w-full px-4 py-3 rounded-xl border border-primary-200 bg-white text-primary-900 placeholder:text-primary-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent disabled:bg-primary-50 disabled:cursor-not-allowed mb-4"
+            className="field-input mb-4"
             placeholder="Units to add"
             value={newStock}
             onChange={(event) => setNewStock(event.target.value)}
@@ -193,9 +189,14 @@ function ProductCard({
 
 function Modal({ title, children }) {
   return (
-    <div className="fixed inset-0 bg-primary-900/50 flex justify-center items-center z-50 px-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm p-6 animate-scale-in">
-        <h3 className="text-lg font-semibold text-primary-900 mb-4">{title}</h3>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary-950/50 px-4 backdrop-blur-xs animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
+      <div className="w-full max-w-sm animate-scale-in rounded-2xl border border-primary-100 bg-white p-6 shadow-xl">
+        <h3 className="mb-4 text-lg font-semibold text-primary-900">{title}</h3>
         {children}
       </div>
     </div>
@@ -205,23 +206,14 @@ function Modal({ title, children }) {
 function ModalActions({ onCancel, onConfirm, busy, label, danger = false }) {
   return (
     <div className="flex justify-end gap-2">
-      <button
-        type="button"
-        onClick={onCancel}
-        disabled={busy}
-        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent text-primary-700 hover:bg-primary-100 focus:ring-primary-500"
-      >
+      <button type="button" onClick={onCancel} disabled={busy} className="btn-quiet">
         Cancel
       </button>
       <button
         type="button"
         onClick={onConfirm}
         disabled={busy}
-        className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-          danger
-            ? 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 active:scale-[0.98] shadow-sm'
-            : 'bg-primary-900 text-white hover:bg-primary-800 focus:ring-primary-500 active:scale-[0.98] shadow-sm'
-        }`}
+        className={danger ? 'btn-danger' : 'btn-primary'}
       >
         {busy ? 'Working…' : label}
       </button>

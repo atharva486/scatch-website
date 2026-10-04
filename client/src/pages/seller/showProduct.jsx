@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Bar from '../../components/seller/sidemenuSeller';
 import Navbar from '../../components/seller/navbar';
 import useFetch from '../../utils/useFetch';
@@ -15,75 +15,95 @@ function ShowProduct() {
   const product = data?.product;
 
   return (
-    <div className="w-full min-h-screen flex flex-row bg-gradient-to-br from-[#f7f7fa] to-[#e3e8f0]">
-      <div className="flex flex-col flex-1 min-h-screen">
+    <div className="page-shell flex flex-row">
+      <div className="flex min-h-screen flex-1 flex-col">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
         <div className="flex flex-row flex-1 w-full min-h-screen">
           <Bar sidebar={sideBar} />
 
-          <div className="mx-10 my-8 w-full bg-gradient-to-br from-sky-300 to-sky-600 rounded-2xl shadow-md p-10">
-            <p className="text-3xl font-bold text-red-800 pb-6 border-b border-gray-200">
-              Product Information
-            </p>
+          <div className="mx-6 my-8 w-full md:mx-10">
+            <div className="mb-6">
+              <Link
+                to="/seller/dashboard"
+                className="text-sm font-medium text-primary-500 underline-offset-4 hover:text-primary-800 hover:underline"
+              >
+                ← Back to your products
+              </Link>
+              <h1 className="page-heading mt-2">Product information</h1>
+            </div>
 
-            {loading && <p className="text-lg text-gray-900">Loading product…</p>}
-            {!loading && error && <p className="text-lg text-red-900">{error}</p>}
+            {loading && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">Loading product…</p>
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="page-panel border-red-200">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
             {!loading && !error && !product && (
-              <p className="text-lg text-gray-900">This product is no longer available.</p>
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">This product is no longer available.</p>
+              </div>
             )}
 
             {product && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 text-[#2C3E50]">
-                <div className="flex justify-center items-center">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="page-panel flex items-center justify-center">
                   <ProductImage
                     src={product.image}
                     alt={product.productname || 'Product'}
-                    className="w-96 h-80 object-contain bg-white/40 rounded-xl"
+                    className="h-72 w-full rounded-xl bg-surface-100 object-contain"
                   />
                 </div>
 
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="text-lg font-medium">Product Name</label>
-                    <input
-                      type="text"
-                      value={product.productname || ''}
-                      readOnly
-                      className="w-full mt-1 px-4 py-2 rounded-xl border border-gray-300 bg-white shadow-sm"
-                    />
-                  </div>
+                {/* Read-only <input>s implied "you can edit this" when the real
+                    editing happens on the dashboard. Plain text is honest. */}
+                <div className="page-panel">
+                  <dl className="flex flex-col gap-5">
+                    <div>
+                      <dt className="field-label">Product name</dt>
+                      <dd className="text-base font-semibold text-primary-900">
+                        {product.productname}
+                      </dd>
+                    </div>
 
-                  <div>
-                    <label className="text-lg font-medium">Price (in ₹)</label>
-                    <input
-                      type="number"
-                      value={product.price ?? ''}
-                      readOnly
-                      className="w-full mt-1 px-4 py-2 rounded-xl border border-gray-300 bg-white shadow-sm"
-                    />
-                  </div>
+                    <div>
+                      <dt className="field-label">Price</dt>
+                      <dd className="text-xl font-bold text-primary-900">₹{product.price}</dd>
+                    </div>
 
-                  <div>
-                    <label className="text-lg font-medium">Description</label>
-                    <textarea
-                      value={product.description || ''}
-                      readOnly
-                      rows={4}
-                      className="w-full mt-1 px-4 py-2 rounded-xl border border-gray-300 bg-white shadow-sm resize-none"
-                    />
-                  </div>
+                    <div>
+                      <dt className="field-label">Description</dt>
+                      <dd className="text-sm leading-relaxed text-primary-600">
+                        {product.description || 'No description provided.'}
+                      </dd>
+                    </div>
 
-                  <div>
-                    {/* `stock` is the authoritative remaining quantity. The old
-                        page read a `stock_left` field that no longer exists. */}
-                    <label className="text-lg font-medium">Quantity Left</label>
-                    <input
-                      type="number"
-                      value={product.stock ?? 0}
-                      readOnly
-                      className="w-full mt-1 px-4 py-2 rounded-xl border border-gray-300 bg-white shadow-sm"
-                    />
+                    <div>
+                      {/* `stock` is the authoritative remaining quantity. The old
+                          page read a `stock_left` field that no longer exists. */}
+                      <dt className="field-label">Quantity left</dt>
+                      <dd
+                        className={`text-sm font-semibold ${
+                          product.stock === 0 ? 'text-red-600' : 'text-sage-700'
+                        }`}
+                      >
+                        {product.stock === 0
+                          ? 'Out of stock'
+                          : `${product.stock} unit${product.stock === 1 ? '' : 's'} remaining`}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-6 border-t border-primary-100 pt-5">
+                    <Link to="/seller/dashboard" className="btn-primary">
+                      Change price or stock
+                    </Link>
                   </div>
                 </div>
               </div>

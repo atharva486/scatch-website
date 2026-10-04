@@ -10,7 +10,10 @@ const LINKS = [
 /**
  * Collapsible side navigation for the seller portal.
  *
- * Uses the new mature theme with sage accent for seller portal.
+ * Same shape as the customer sidebar with the sage highlight, so the seller
+ * portal reads as the same product. "Account Settings" was an `<a href>`,
+ * causing a full page reload, and the active item's `border-l-4` shifted the
+ * other labels; both fixed here.
  */
 function SidemenuSeller({ sidebar }) {
   const location = useLocation();
@@ -19,54 +22,55 @@ function SidemenuSeller({ sidebar }) {
     <nav
       aria-label="Seller navigation"
       aria-hidden={!sidebar}
-      className={`transition-all duration-500 ease-in-out min-h-screen shrink-0 overflow-hidden shadow-xl ${
-        sidebar ? 'w-48' : 'w-0'
-      } bg-primary-900 border-r border-primary-800`}
+      className={`min-h-screen shrink-0 overflow-hidden border-r border-primary-800 bg-primary-900
+                  shadow-xl transition-all duration-500 ease-in-out ${sidebar ? 'w-48' : 'w-0'}`}
     >
       {sidebar && (
-        <div className="flex flex-col h-full">
-          {/* Brand area at top */}
-          <div className="flex items-center gap-3 px-4 py-6 border-b border-primary-800">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sage-500 to-sage-600 flex items-center justify-center">
-              <span className="text-white text-xl font-bold">S</span>
+        <div className="flex h-full flex-col">
+          <div className="flex items-center gap-3 border-b border-primary-800 px-4 py-6">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sage-500 to-sage-600">
+              <span className="text-xl font-bold text-white">S</span>
             </div>
             <div>
-              <p className="text-white font-bold text-lg">Scatch</p>
-              <p className="text-sage-300 text-xs">Seller Portal</p>
+              <p className="text-lg font-bold text-white">Scatch</p>
+              <p className="text-xs text-sage-300">Seller Portal</p>
             </div>
           </div>
 
-          {/* Navigation links */}
-          <div className="flex-1 flex flex-col px-3 py-6 gap-1 overflow-y-auto">
+          <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-6">
             {LINKS.map(({ to, label, icon }) => {
               const isActive = location.pathname === to;
+
               return (
                 <Link
                   key={to}
                   to={to}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-200
-                    ${isActive
-                      ? 'bg-sage-600/20 text-sage-300 border-l-4 border-sage-500'
-                      : 'text-primary-300 hover:bg-primary-800 hover:text-white'}
-                  `}
+                  className={`flex items-center gap-3 rounded-xl border-l-4 px-3 py-3 text-sm font-medium
+                              transition-all duration-200 ${
+                                isActive
+                                  ? 'border-sage-500 bg-sage-600/20 text-sage-300'
+                                  : 'border-transparent text-primary-300 hover:bg-primary-800 hover:text-white'
+                              }`}
+                  aria-current={isActive ? 'page' : undefined}
                 >
-                  <span className="text-lg" aria-hidden="true">{icon}</span>
+                  <span className="text-lg" aria-hidden="true">
+                    {icon}
+                  </span>
                   <span className="whitespace-nowrap">{label}</span>
                 </Link>
               );
             })}
 
-            {/* Divider */}
-            <div className="h-px bg-primary-800 my-2" />
+            <div className="my-2 h-px bg-primary-800" />
 
-            {/* Footer info */}
             <div className="px-3 py-2 text-center">
-              <p className="text-primary-500 text-xs uppercase tracking-wider">
-                Manage your store
-              </p>
-              <a href="/seller/profile" className="text-accent-600 hover:text-accent-700 underline-offset-2 hover:underline transition-colors duration-150 text-xs">
-                Account Settings
-              </a>
+              <p className="text-xs uppercase tracking-wider text-primary-500">Manage your store</p>
+              <Link
+                to="/seller/profile"
+                className="text-xs text-sage-300 underline-offset-2 transition-colors duration-150 hover:text-sage-200 hover:underline"
+              >
+                Account settings
+              </Link>
             </div>
           </div>
         </div>

@@ -35,8 +35,8 @@ export default function RequireAuth({ role, children }) {
 
   if (state.status === 'checking') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FDEFEF]">
-        <p className="text-lg text-gray-600 animate-pulse">Loading…</p>
+      <div className="flex min-h-screen items-center justify-center bg-surface-100">
+        <p className="text-lg text-primary-600 animate-pulse">Loading…</p>
       </div>
     );
   }

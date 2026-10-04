@@ -47,36 +47,22 @@ function ProductCard({ image, productname, price, description, stock, to, onBuy,
 
         <p className="text-sm text-primary-500 line-clamp-2">{description}</p>
 
-        <div className="flex flex-col gap-2 pt-2 border-t border-primary-100">
-          <Link
-            to={to}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-primary-300 text-primary-700 hover:bg-primary-50 focus:ring-primary-500 text-center text-sm py-2"
-          >
+        <div className="flex flex-col gap-2 border-t border-primary-100 pt-4">
+          <Link to={to} className="btn-quiet w-full">
             View Details
           </Link>
 
           {isBuyer ? (
             <>
-              <button
-                type="button"
-                onClick={onBuy}
-                disabled={!inStock}
-                className={inStock
-                  ? 'inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-sage-600 text-white hover:bg-sage-700 focus:ring-sage-500 active:scale-[0.98] shadow-sm text-sm py-2'
-                  : 'inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-primary-300 text-primary-500 cursor-not-allowed text-sm py-2'}
-              >
+              <button type="button" onClick={onBuy} disabled={!inStock} className="btn-sage w-full">
                 {inStock ? 'Buy Now' : 'Out of Stock'}
               </button>
-              <button
-                type="button"
-                onClick={onCart}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed bg-accent-600 text-white hover:bg-accent-700 focus:ring-accent-500 active:scale-[0.98] shadow-sm text-sm py-2"
-              >
+              <button type="button" onClick={onCart} disabled={!inStock} className="btn-primary w-full">
                 Add to Cart
               </button>
             </>
           ) : (
-            <p className="text-xs text-primary-400 text-center py-1">
+            <p className="py-1 text-center text-xs text-primary-400">
               {stock} unit{stock === 1 ? '' : 's'} in stock
             </p>
           )}

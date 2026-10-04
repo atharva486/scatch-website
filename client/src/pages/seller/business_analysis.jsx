@@ -12,28 +12,35 @@ function Business_dashboard() {
   const logout = useLogout('/seller/login');
 
   return (
-    <div className="w-full min-h-screen flex bg-[#F4F6F8]">
+    <div className="page-shell flex">
       <Bar sidebar={sideBar} />
 
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex min-h-screen flex-1 flex-col">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
-        <div className="mx-10 my-8 bg-gradient-to-b from-sky-300 to-sky-700 rounded-2xl shadow-lg px-6 pb-10">
-          <p className="text-2xl font-semibold text-red-800 mb-4 border-b pt-5">Dashboard Analysis</p>
+        <div className="mx-6 my-8 w-full md:mx-10">
+          <div className="mb-6">
+            <p className="section-label">Seller portal</p>
+            <h1 className="page-heading mt-1.5">Business analysis</h1>
+            <p className="page-sub">How your store has performed over the last six months.</p>
+          </div>
 
-          <div className="w-full flex flex-col gap-10">
-            <div className="w-full h-[320px] mt-5 bg-[#F0F4FF] rounded-xl shadow-md">
-              <Sales_over_time />
-            </div>
-            <div className="w-full h-[320px] mt-0 bg-[#F0F4FF] rounded-xl shadow-md">
-              <Total_revenue />
-            </div>
-            <div className="w-full h-[320px] mt-0 bg-[#F0F4FF] rounded-xl shadow-md">
-              <Sold_products />
-            </div>
-            <div className="w-full h-[320px] mt-0 bg-[#F0F4FF] rounded-xl shadow-md">
-              <Stock_item />
-            </div>
+          <div className="flex w-full flex-col gap-6">
+            {[
+              { key: 'sales', label: 'Sales over time', chart: Sales_over_time },
+              { key: 'revenue', label: 'Revenue', chart: Total_revenue },
+              { key: 'sold', label: 'Units sold', chart: Sold_products },
+              { key: 'stock', label: 'Stock on hand', chart: Stock_item },
+            ].map(({ key, label, chart: Chart }) => (
+              <section key={key} className="page-panel p-0">
+                <h2 className="border-b border-primary-100 px-6 py-4 text-sm font-semibold text-primary-700">
+                  {label}
+                </h2>
+                <div className="h-[320px] w-full p-4">
+                  <Chart />
+                </div>
+              </section>
+            ))}
           </div>
         </div>
       </div>

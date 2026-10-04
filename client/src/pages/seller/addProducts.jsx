@@ -78,88 +78,104 @@ function AddProduct() {
   };
 
   return (
-    <div className="w-full min-h-screen flex bg-gradient-to-br from-[#fef6f6] to-[#f2f6fb] font-sans">
-      <div className="flex flex-col flex-1 min-h-screen">
+    <div className="page-shell flex">
+      <div className="flex min-h-screen flex-1 flex-col">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
-        <div className="flex flex-row flex-1 min-h-screen">
+        <div className="flex w-full min-h-screen flex-1 flex-row">
           <Bar sidebar={sideBar} />
 
-          <div className="mx-8 my-10 bg-gradient-to-b from-sky-300 to-sky-700 w-full rounded-2xl shadow-lg p-10">
-            <p className="text-3xl font-bold text-[#2C3E50] mb-8 border-b pb-3 border-gray-300">
-              List a New Product
-            </p>
+          <div className="mx-6 my-8 w-full md:mx-10">
+            <div className="mb-6">
+              <p className="section-label">Seller portal</p>
+              <h1 className="page-heading mt-1.5">List a new product</h1>
+              <p className="page-sub">
+                Buyers see this immediately, so use a clear name and an accurate description.
+              </p>
+            </div>
 
-            <form onSubmit={submit} className="flex flex-col gap-6">
+            <form onSubmit={submit} className="page-panel max-w-2xl">
               <div className="flex flex-col">
-                <label className="text-lg text-gray-700 mb-1">Product Name</label>
+                <label className="field-label" htmlFor="productname">
+                  Product name
+                </label>
                 <input
+                  id="productname"
                   type="text"
                   name="productname"
                   value={formData.productname}
                   placeholder="e.g. Vintage Exhaust System"
                   onChange={handleChange}
-                  className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                  className="field-input"
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="text-lg text-gray-700 mb-1">Price (in Rupees)</label>
+              <div className="mt-5 flex flex-col">
+                <label className="field-label" htmlFor="price">
+                  Price (₹)
+                </label>
                 <input
+                  id="price"
                   type="number"
                   name="price"
                   value={formData.price}
                   placeholder="e.g. 4999"
                   onChange={handleChange}
                   min="0"
-                  className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                  className="field-input"
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="text-lg text-gray-700 mb-1">Description</label>
+              <div className="mt-5 flex flex-col">
+                <label className="field-label" htmlFor="description">
+                  Description
+                </label>
                 <textarea
-                  placeholder="Detailed product description…"
+                  id="description"
+                  placeholder="What is this part, and what does it fit?"
                   value={formData.description}
                   name="description"
                   rows={4}
                   onChange={handleChange}
-                  className="border border-gray-300 rounded-xl px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                  className="field-input resize-none"
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="text-lg text-gray-700 mb-1">Stock</label>
+              <div className="mt-5 flex flex-col">
+                <label className="field-label" htmlFor="stock">
+                  Stock
+                </label>
                 <input
+                  id="stock"
                   type="number"
                   name="stock"
                   value={formData.stock}
                   placeholder="e.g. 10"
                   onChange={handleChange}
                   min="0"
-                  className="border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#f9fafb]"
+                  className="field-input"
                 />
+                <p className="field-hint">How many units you have on hand right now.</p>
               </div>
 
-              <div className="flex flex-col">
-                <label className="text-lg text-gray-700 mb-1">Upload Image</label>
+              <div className="mt-5 flex flex-col">
+                <label className="field-label" htmlFor="image">
+                  Product image
+                </label>
                 <input
+                  id="image"
                   type="file"
                   accept="image/*"
                   ref={fileRef}
                   name="image"
                   onChange={handleChange}
-                  className="border border-dashed border-blue-300 px-4 py-3 rounded-xl bg-[#f0f6ff] hover:bg-[#e4efff] transition-all duration-200"
+                  className="cursor-pointer rounded-xl border border-dashed border-primary-300 bg-surface-50 px-4 py-3 text-sm text-primary-500 transition hover:border-accent-400 hover:bg-surface-100"
                 />
               </div>
 
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="bg-green-500 text-white disabled:bg-green-300 px-8 py-3 rounded-full text-lg font-semibold hover:bg-green-800 transition-all duration-200"
-                >
-                  {submitting ? 'Creating product…' : 'Create Product'}
+              <div className="mt-7 border-t border-primary-100 pt-6">
+                <button type="submit" disabled={submitting} className="btn-sage">
+                  {submitting ? 'Creating product…' : 'Create product'}
                 </button>
               </div>
             </form>

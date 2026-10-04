@@ -18,55 +18,71 @@ function ProfileSeller() {
   const seller = data?.seller;
 
   return (
-    <div className="w-full min-h-screen flex bg-[#FDEFEF] font-sans">
-      <div className="flex flex-col flex-1 min-h-screen">
+    <div className="page-shell flex">
+      <div className="flex min-h-screen flex-1 flex-col">
         <Navbar sidebar={sideBar} change={() => setSideBar((prev) => !prev)} logout={logout} f={0} />
 
-        <div className="flex flex-row flex-1 w-full min-h-screen">
+        <div className="flex w-full min-h-screen flex-1 flex-row">
           <Bar sidebar={sideBar} />
 
-          <div className="mx-8 my-10 bg-gradient-to-b from-sky-300 to-sky-700 h-fit w-full rounded-2xl shadow-md p-10">
-            <p className="text-3xl font-semibold text-red-900 mb-8 border-b pb-4">Profile Details</p>
+          <div className="mx-6 my-8 w-full md:mx-10">
+            <div className="mb-6">
+              <p className="section-label">Seller portal</p>
+              <h1 className="page-heading mt-1.5">Profile details</h1>
+              <p className="page-sub">
+                Your GSTIN is shown on every listing, so keep it accurate.
+              </p>
+            </div>
 
-            {loading && <p className="text-lg text-gray-900">Loading your profile…</p>}
-            {!loading && error && <p className="text-lg text-red-900">{error}</p>}
+            {loading && (
+              <div className="page-panel">
+                <p className="text-sm text-primary-500">Loading your profile…</p>
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="page-panel border-red-200">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
 
             {seller && (
-              <div className="flex flex-col gap-6">
-                {[
-                  { field: 'fullname', label: 'Name' },
-                  { field: 'email', label: 'Email' },
-                  { field: 'gstin', label: 'GSTIN' },
-                ].map(({ field, label }) => (
-                  <div key={field}>
-                    <label className="text-lg text-gray-700 mb-1 block">{label}</label>
-                    <div className="flex gap-4">
-                      <input
-                        type="text"
-                        value={seller[field] ?? ''}
-                        readOnly
-                        className="border bg-[#FDEFEF] w-full border-gray-300 rounded-lg px-4 py-2 focus:outline-none"
-                      />
+              <div className="page-panel max-w-2xl">
+                <dl className="flex flex-col gap-5">
+                  {[
+                    { field: 'fullname', label: 'Business name' },
+                    { field: 'email', label: 'Email' },
+                    { field: 'gstin', label: 'GSTIN' },
+                  ].map(({ field, label }) => (
+                    <div key={field} className="flex items-end justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <dt className="field-label">{label}</dt>
+                        <dd
+                          className={`truncate text-sm font-medium text-primary-900 ${
+                            field === 'gstin' ? 'uppercase tracking-wider' : ''
+                          }`}
+                        >
+                          {seller[field] ?? '—'}
+                        </dd>
+                      </div>
                       <button
                         type="button"
-                        onClick={() =>
-                          setEditField({ field, originalVal: seller[field] ?? '' })
-                        }
-                        className="px-1 text-blue-600 hover:text-blue-400 hover:border-b hover:border-blue-400"
+                        onClick={() => setEditField({ field, originalVal: seller[field] ?? '' })}
+                        className="btn-quiet shrink-0 px-3 py-1.5 text-xs"
                       >
                         Edit
                       </button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </dl>
 
-                <div className="flex">
+                <div className="mt-7 border-t border-primary-100 pt-6">
                   <button
                     type="button"
                     onClick={() => setEditField({ field: 'password', originalVal: '' })}
-                    className="mx-auto bg-green-500 text-white rounded-xl px-6 py-2 text-lg font-semibold hover:bg-green-700 transition-all duration-200"
+                    className="btn-sage"
                   >
-                    Change Password
+                    Change password
                   </button>
                 </div>
               </div>
